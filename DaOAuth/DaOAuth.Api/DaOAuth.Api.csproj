@@ -44,6 +44,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.WebApi.Versioning, Version=2.3.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Versioning.2.3.0\lib\net45\Microsoft.AspNet.WebApi.Versioning.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.7\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
     </Reference>
@@ -86,7 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="Controllers\OAuthController.cs" />
+    <Compile Include="Controllers\v1.0\OAuthController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -104,6 +113,24 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Models\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DaOAuth.Dal.EF\DaOAuth.Dal.EF.csproj">
+      <Project>{753ba014-4e67-4643-8137-789d3e9313fa}</Project>
+      <Name>DaOAuth.Dal.EF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DaOAuth.Dal.Interface\DaOAuth.Dal.Interface.csproj">
+      <Project>{ee36dfdf-1d93-4aeb-a1d8-fa78bc347d69}</Project>
+      <Name>DaOAuth.Dal.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DaOauth.Domain\DaOAuth.Domain.csproj">
+      <Project>{ca67a048-968d-4107-a30c-44427910ea7f}</Project>
+      <Name>DaOAuth.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DaOAuth.Service\DaOAuth.Service.csproj">
+      <Project>{cd0bcbf7-c858-49d8-adb9-4418f8ec1b84}</Project>
+      <Name>DaOAuth.Service</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

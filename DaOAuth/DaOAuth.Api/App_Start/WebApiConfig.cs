@@ -1,24 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Web.Http.Routing;
 using System.Web.Http;
+using System.Web.Http.Routing;
 
 namespace DaOAuth.Api
 {
     public static class WebApiConfig
     {
         public static void Register(HttpConfiguration config)
-        {
-            // Configuration et services API Web
+        {           
+            var constraintResolver = new DefaultInlineConstraintResolver()
+            {
+                ConstraintMap =
+                {
+                    ["apiVersion"] = typeof(ApiVersionRouteConstraint)
+                }
+            };
 
-            // Itinéraires de l'API Web
-            config.MapHttpAttributeRoutes();
-
-            config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
+            config.Formatters.Remove(config.Formatters.XmlFormatter);
+            config.MapHttpAttributeRoutes(constraintResolver);
+            config.AddApiVersioning();
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
         }
     }
 }
