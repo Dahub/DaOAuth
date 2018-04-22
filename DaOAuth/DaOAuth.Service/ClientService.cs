@@ -5,7 +5,7 @@ namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
-        public ClientInfoForAuthorizationCodeGrant GetClientInfoForAuthorizationCodeGrant(string clientPublicId)
+        public ClientInfoForAuthorizationCodeGrant GetClientInfoForAuthorizationCodeGrant(string clientPublicId, string requestRedirectUri)
         {
             ClientInfoForAuthorizationCodeGrant toReturn = new ClientInfoForAuthorizationCodeGrant()
             {
@@ -32,7 +32,7 @@ namespace DaOAuth.Service
                         return toReturn;
 
                     toReturn.IsValid = true;
-                    toReturn.RedirectUri = client.DefautRedirectUri;
+                    toReturn.RedirectUri = String.IsNullOrEmpty(requestRedirectUri)?client.DefautRedirectUri:requestRedirectUri;
                 }
 
                 return toReturn;

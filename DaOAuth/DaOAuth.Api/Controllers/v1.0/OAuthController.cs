@@ -29,58 +29,51 @@ namespace DaOAuth.Api.Controllers.V1_0
                 en recommandé : "state" */
 
                 // state
-                var states = Request.GetQueryNameValuePairs().Where(k => k.Key.Equals("state")).Select(v => v.Value).ToList();
-                if (states.Count > 1)
-                    return GenerateErrorResponse("invalid_request", "Le paramètre state doit être présent une et une seule fois");
                 string myState = String.Empty;
-                if (states.Count == 1)
-                    myState = states.First();
+                if (!TryExtractUniqueRequestParamValue("state", false, out myState))
+                    return GenerateErrorResponse("invalid_request", "Le paramètre state doit être présent une et une seule fois");
 
                 // response type
-                var response_types = Request.GetQueryNameValuePairs().Where(k => k.Key.Equals("response_type")).Select(v => v.Value).ToList();
-                if (response_types == null || response_types.Count != 1)
+                string response_type = String.Empty;
+                if (!TryExtractUniqueRequestParamValue("response_type", true, out response_type))
                     return GenerateErrorResponse("invalid_request", "Le paramètre response_type doit être présent une et une seule fois et avoir une valeur", myState);
-                string response_type = response_types.First();
                 if (response_type != "code")
                     return GenerateErrorResponse("unsupported_response_type", "La valeur du paramètre response_type doit être code", myState);
 
                 // client_id
-                var client_ids = Request.GetQueryNameValuePairs().Where(k => k.Key.Equals("client_id")).Select(v => v.Value).ToList();
-                if (client_ids == null || client_ids.Count != 1)
+                string client_id = String.Empty;
+                if (!TryExtractUniqueRequestParamValue("client_id", true, out client_id))
                     return GenerateErrorResponse("invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur", myState);
-                string client_id = client_ids.First();
 
                 // redirect url
-                var redirects_uris = Request.GetQueryNameValuePairs().Where(k => k.Key.Equals("redirect_uri")).Select(v => v.Value).ToList();
-                if (redirects_uris.Count > 1)
-                    return GenerateErrorResponse("invalid_request", "Le paramètre redirects_uri doit être présent une et une seule fois");
                 string redirectUri = String.Empty;
-                if (redirects_uris.Count == 1)
-                    redirectUri = redirects_uris.First();
-
+                if (!TryExtractUniqueRequestParamValue("redirect_uri", false, out redirectUri))
+                    return GenerateErrorResponse("invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur", myState);
+                
                 ClientService cs = new ClientService()
                 {
                     ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
                     Factory = new EfRepositoriesFactory()
                 };
-                var clientInfos = cs.GetClientInfoForAuthorizationCodeGrant(client_id);
+                var clientInfos = cs.GetClientInfoForAuthorizationCodeGrant(client_id, redirectUri);
 
                 if (!clientInfos.IsValid)
                     return GenerateErrorResponse("unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", myState);
 
-                if (String.IsNullOrEmpty(redirectUri))
-                    redirectUri = clientInfos.RedirectUri;
-
-
                 // tout est ok, on peut générer un nouveau code pour cette demande
                 var myCode = cs.AddCodeToClient(client_id);
 
-                string location = String.Concat(redirectUri, "?code=", myCode.CodeValue);
+                string location = String.Concat(clientInfos.RedirectUri, "?code=", myCode.CodeValue);
                 if (!String.IsNullOrEmpty(myState))
                     location = String.Concat(location, "&state=", myState);
 
+                // Création de la response de redirection
                 var response = Request.CreateResponse(HttpStatusCode.Moved);
-                response.Headers.Location = new Uri(location);
+                Uri myUri;
+                if (!Uri.TryCreate(location, UriKind.Absolute, out myUri))
+                    return GenerateErrorResponse("invalid_request", "l'adresse de redirection est invalide", myState);
+                response.Headers.Location = myUri;
+
                 return ResponseMessage(response);
             }
             catch (Exception ex)
@@ -92,6 +85,24 @@ namespace DaOAuth.Api.Controllers.V1_0
                 via an HTTP redirect.) */
                 return GenerateErrorResponse("server_error", String.Format("Une erreur s'est produite : {0}", ex.Message));
             }
+        }
+
+        private bool TryExtractUniqueRequestParamValue(string paramName, bool mustExist, out string value)
+        {
+            value = String.Empty;
+
+            var values = Request.GetQueryNameValuePairs().Where(k => k.Key.Equals(paramName)).Select(v => v.Value).ToList();
+
+            if (mustExist & values.Count == 0)
+                return false;
+
+            if (values.Count > 1)
+                return false;
+
+            if (values.Count == 1)
+                value = values.First();
+
+            return true;
         }
 
         private IHttpActionResult GenerateErrorResponse(string errorName, string errorDescription, string stateInfo)

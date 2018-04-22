@@ -16,7 +16,8 @@ namespace DaOAuth.Dal.EF
 
         public Client GetByPublicId(string publicId)
         {
-            return ((DaOAuthContext)Context).Clients.Where(c => c.PublicId.Equals(publicId)).FirstOrDefault();
+            return ((DaOAuthContext)Context).Clients.
+                Where(c => c.PublicId.Equals(publicId)).FirstOrDefault();
         }
     }
 }
