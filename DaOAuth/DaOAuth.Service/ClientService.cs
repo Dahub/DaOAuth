@@ -22,6 +22,9 @@ namespace DaOAuth.Service
 
                     if (!client.IsValid)
                         return false;
+
+                    if (client.ClientTypeId != (int)EClientType.CONFIDENTIAL)
+                        return false;
                 }
 
                 return true;

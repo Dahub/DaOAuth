@@ -46,6 +46,7 @@
     <Compile Include="ServiceBase.cs" />
     <Compile Include="Tools\ConfigurationWrapper.cs" />
     <Compile Include="Tools\DaOauthServiceException.cs" />
+    <Compile Include="Tools\EClientType.cs" />
     <Compile Include="Tools\RandomMaker.cs" />
   </ItemGroup>
   <ItemGroup>

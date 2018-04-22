@@ -13,10 +13,15 @@ namespace DaOAuth.Dal.EF
 
         public DbSet<Client> Clients { get; set; }
         public DbSet<Code> Codes { get; set; }
+        public DbSet<ClientType> ClientsTypes { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("auth");
+
+            modelBuilder.Entity<ClientType>().ToTable("ClientsTypes");
+            modelBuilder.Entity<ClientType>().HasKey<int>(c => c.Id);
+            modelBuilder.Entity<ClientType>().Property(p => p.Wording).HasColumnName("Wording").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
 
             modelBuilder.Entity<Client>().ToTable("Clients");
             modelBuilder.Entity<Client>().HasKey<int>(c => c.Id);
@@ -26,6 +31,8 @@ namespace DaOAuth.Dal.EF
             modelBuilder.Entity<Client>().Property(p => p.Name).HasColumnName("Name").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.PublicId).HasColumnName("PublicId").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
             modelBuilder.Entity<Client>().HasMany<Code>(c => c.Codes).WithRequired(c => c.Client).WillCascadeOnDelete();
+            modelBuilder.Entity<Client>().Property(p => p.ClientTypeId).HasColumnName("FK_ClientType").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<Client>().HasRequired<ClientType>(c => c.ClientType).WithMany(ct => ct.Clients).HasForeignKey<int>(ct => ct.ClientTypeId);
 
             modelBuilder.Entity<Code>().ToTable("Codes");
             modelBuilder.Entity<Code>().HasKey<int>(c => c.Id);

@@ -17,6 +17,7 @@ namespace DaOAuth.Service.Test
         {
             Assert.False(cs.CheckIfClientIsValid(String.Empty));
             Assert.False(cs.CheckIfClientIsValid("abc"));
+            Assert.False(cs.CheckIfClientIsValid("public"));
             Assert.True(cs.CheckIfClientIsValid("id-valide"));
         }
 
