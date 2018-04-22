@@ -48,30 +48,42 @@ namespace DaOAuth.Api.Controllers.V1_0
                 var client_ids = Request.GetQueryNameValuePairs().Where(k => k.Key.Equals("client_id")).Select(v => v.Value).ToList();
                 if (client_ids == null || client_ids.Count != 1)
                     return GenerateErrorResponse("invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur", myState);
-                string client_id = client_ids.First();                   
+                string client_id = client_ids.First();
+
+                // redirect url
+                var redirects_uris = Request.GetQueryNameValuePairs().Where(k => k.Key.Equals("redirect_uri")).Select(v => v.Value).ToList();
+                if (redirects_uris.Count > 1)
+                    return GenerateErrorResponse("invalid_request", "Le paramètre redirects_uri doit être présent une et une seule fois");
+                string redirectUri = String.Empty;
+                if (redirects_uris.Count == 1)
+                    redirectUri = redirects_uris.First();
 
                 ClientService cs = new ClientService()
                 {
                     ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
                     Factory = new EfRepositoriesFactory()
                 };
-                if (!cs.CheckIfClientIsValid(client_id))
+                var clientInfos = cs.GetClientInfoForAuthorizationCodeGrant(client_id);
+
+                if (!clientInfos.IsValid)
                     return GenerateErrorResponse("unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", myState);
+
+                if (String.IsNullOrEmpty(redirectUri))
+                    redirectUri = clientInfos.RedirectUri;
+
 
                 // tout est ok, on peut générer un nouveau code pour cette demande
                 var myCode = cs.AddCodeToClient(client_id);
 
-                // var response = Request.CreateResponse(HttpStatusCode.Moved);
-                //response.Headers.Location = new Uri("http://www.abcmvc.com");
-                //return response;
-                //if (String.IsNullOrEmpty(red))
-                if (String.IsNullOrEmpty(myState))
-                    return Ok(new { code = myCode.CodeValue });
-                
-                else
-                    return Ok(new { code = myCode.CodeValue , state = myState });
+                string location = String.Concat(redirectUri, "?code=", myCode.CodeValue);
+                if (!String.IsNullOrEmpty(myState))
+                    location = String.Concat(location, "&state=", myState);
+
+                var response = Request.CreateResponse(HttpStatusCode.Moved);
+                response.Headers.Location = new Uri(location);
+                return ResponseMessage(response);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 /* The authorization server encountered an unexpected
                 condition that prevented it from fulfilling the request.

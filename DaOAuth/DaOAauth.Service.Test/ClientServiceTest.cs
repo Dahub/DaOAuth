@@ -13,12 +13,12 @@ namespace DaOAuth.Service.Test
         };
 
         [Fact]
-        public void CheckIfClientIsValidTest()
+        public void GetClientInfoForAuthorizationCodeGrantTest()
         {
-            Assert.False(cs.CheckIfClientIsValid(String.Empty));
-            Assert.False(cs.CheckIfClientIsValid("abc"));
-            Assert.False(cs.CheckIfClientIsValid("public"));
-            Assert.True(cs.CheckIfClientIsValid("id-valide"));
+            Assert.False(cs.GetClientInfoForAuthorizationCodeGrant(String.Empty).IsValid);
+            Assert.False(cs.GetClientInfoForAuthorizationCodeGrant("abc").IsValid);
+            Assert.False(cs.GetClientInfoForAuthorizationCodeGrant("public").IsValid);
+            Assert.True(cs.GetClientInfoForAuthorizationCodeGrant("id-valide").IsValid);
         }
 
         [Fact]
