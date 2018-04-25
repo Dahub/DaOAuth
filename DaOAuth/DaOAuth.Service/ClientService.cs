@@ -5,17 +5,12 @@ namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
-        public ClientInfoForAuthorizationCodeGrant GetClientInfoForAuthorizationCodeGrant(string clientPublicId, string requestRedirectUri)
-        {
-            ClientInfoForAuthorizationCodeGrant toReturn = new ClientInfoForAuthorizationCodeGrant()
-            {
-                IsValid = false
-            };
-
+        public bool GetClientInfoForAuthorizationCodeGrant(string clientPublicId, string requestRedirectUri)
+        {    
             try
             {
                 if (String.IsNullOrEmpty(clientPublicId))
-                    return toReturn;
+                    return false;
 
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
@@ -23,19 +18,19 @@ namespace DaOAuth.Service
                     var client = clientRepo.GetByPublicId(clientPublicId);
 
                     if (client == null)
-                        return toReturn;
+                        return false;
 
                     if (!client.IsValid)
-                        return toReturn;
+                        return false;
 
                     if (client.ClientTypeId != (int)EClientType.CONFIDENTIAL)
-                        return toReturn;
+                        return false;
 
-                    toReturn.IsValid = true;
-                    toReturn.RedirectUri = String.IsNullOrEmpty(requestRedirectUri)?client.DefautRedirectUri:requestRedirectUri;
+                    if (client.DefautRedirectUri != requestRedirectUri)
+                        return false;
                 }
 
-                return toReturn;
+                return true;
             }
             catch (DaOauthServiceException)
             {

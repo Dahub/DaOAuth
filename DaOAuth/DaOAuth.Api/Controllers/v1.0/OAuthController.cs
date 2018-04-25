@@ -1,10 +1,18 @@
 ﻿using DaOAuth.Dal.EF;
 using DaOAuth.Service;
+using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.DataHandler;
+using Microsoft.Owin.Security.DataHandler.Encoder;
+using Microsoft.Owin.Security.DataHandler.Serializer;
+using Microsoft.Owin.Security.DataProtection;
+using Microsoft.Owin.Security.OAuth;
 using Microsoft.Web.Http;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Web.Http;
 
 namespace DaOAuth.Api.Controllers.V1_0
@@ -19,7 +27,7 @@ namespace DaOAuth.Api.Controllers.V1_0
     {
         [HttpGet]
         [Route("authorize")]
-        public IHttpActionResult Authorize()
+        public IHttpActionResult Authorize(string response_type)
         {
             try
             {
@@ -39,7 +47,7 @@ namespace DaOAuth.Api.Controllers.V1_0
                 }
 
                 // response type
-                string response_type = String.Empty;
+                 response_type = String.Empty;
                 if (!isError && !TryExtractUniqueRequestParamValue("response_type", true, out response_type))
                 {
                     errorMsg = GenerateErrorMessage("invalid_request", "Le paramètre response_type doit être présent une et une seule fois et avoir une valeur", myState);
@@ -61,8 +69,8 @@ namespace DaOAuth.Api.Controllers.V1_0
 
                 // redirect url
                 string redirectUri = String.Empty;
-                if (!TryExtractUniqueRequestParamValue("redirect_uri", false, out redirectUri))
-                { 
+                if (!TryExtractUniqueRequestParamValue("redirect_uri", true, out redirectUri))
+                {
                     errorMsg = GenerateErrorMessage("invalid_request", "Le paramètre redirect_uri doit être présent une et une seule fois et avoir une valeur", myState);
                     isError = true;
                 }
@@ -74,8 +82,8 @@ namespace DaOAuth.Api.Controllers.V1_0
                 };
 
                 var clientInfos = cs.GetClientInfoForAuthorizationCodeGrant(client_id, redirectUri);
-                if (!clientInfos.IsValid)
-                { 
+                if (!clientInfos)
+                {
                     errorMsg = GenerateErrorMessage("unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", myState);
                     isError = true;
                 }
@@ -86,14 +94,14 @@ namespace DaOAuth.Api.Controllers.V1_0
                 if (!isError)
                 {
                     var myCode = cs.AddCodeToClient(client_id);
-                    location = String.Concat(clientInfos.RedirectUri, "?code=", myCode.CodeValue);
+                    location = String.Concat(redirectUri, "?code=", myCode.CodeValue);
                     if (!String.IsNullOrEmpty(myState))
                         location = String.Concat(location, "&state=", myState);
                 }
                 else
                 {
-                    location = String.Concat(clientInfos.IsValid?clientInfos.RedirectUri:redirectUri, "?", errorMsg);
-                }               
+                    location = String.Concat(redirectUri, "?", errorMsg);
+                }
 
                 // Création de la response de redirection
                 var response = Request.CreateResponse(HttpStatusCode.Moved);
@@ -114,7 +122,32 @@ namespace DaOAuth.Api.Controllers.V1_0
         [Route("token")]
         public IHttpActionResult Token()
         {
-            return Ok();
+            ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>()
+            {
+                new Claim("test","plop")
+            },
+           OAuthDefaults.AuthenticationType);
+
+
+
+            var tokenExpiration = TimeSpan.FromDays(900);
+            var props = new AuthenticationProperties()
+            {
+                IssuedUtc = DateTime.UtcNow,
+                ExpiresUtc = DateTime.UtcNow.Add(tokenExpiration),
+            };
+            var ticket = new AuthenticationTicket(identity, props);
+
+            // https://stackoverflow.com/questions/28406624/asp-net-oauth-how-is-access-token-generated?rq=1
+            // https://github.com/aspnet/AspNetKatana/tree/dev/src/Microsoft.Owin.Security
+            var aa = new OAuthBearerAuthenticationOptions()
+            {
+                AccessTokenFormat = new SecureDataFormat<AuthenticationTicket>(new TicketSerializer(), new DpapiDataProtectionProvider("DaOAuth").Create(new string[] { "OAuth" }), new Base64UrlTextEncoder())
+            };
+
+            var accessToken = aa.AccessTokenFormat.Protect(ticket);
+
+            return Ok(accessToken);
         }
 
         private bool TryExtractUniqueRequestParamValue(string paramName, bool mustExist, out string value)

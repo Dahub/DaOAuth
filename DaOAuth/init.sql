@@ -50,6 +50,10 @@ insert into auth.ClientsTypes(wording) values ('public')
 insert into auth.ClientsTypes(wording) values ('confidential')
 go
 
+/* données de test */
+insert into auth.Clients (publicId, Name, DefautRedirectUri, CreationDate, IsValid, FK_ClientType) 
+values ('G7H8q4yBhpinNo6H', 'test', 'http://www.google.fr', getdate(), 1, 2)
+go
 
 select * from auth.Clients
 select * from auth.Codes
