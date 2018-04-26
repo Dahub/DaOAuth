@@ -47,7 +47,7 @@ namespace DaOAuth.Api.Controllers.V1_0
                 }
 
                 // response type
-                 response_type = String.Empty;
+                response_type = String.Empty;
                 if (!isError && !TryExtractUniqueRequestParamValue("response_type", true, out response_type))
                 {
                     errorMsg = GenerateErrorMessage("invalid_request", "Le paramètre response_type doit être présent une et une seule fois et avoir une valeur", myState);
@@ -81,7 +81,7 @@ namespace DaOAuth.Api.Controllers.V1_0
                     Factory = new EfRepositoriesFactory()
                 };
 
-                var clientInfos = cs.GetClientInfoForAuthorizationCodeGrant(client_id, redirectUri);
+                var clientInfos = cs.IsClientValidForAuthorizationCodeGrant(client_id, redirectUri);
                 if (!clientInfos)
                 {
                     errorMsg = GenerateErrorMessage("unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", myState);
@@ -120,34 +120,92 @@ namespace DaOAuth.Api.Controllers.V1_0
 
         [HttpPost]
         [Route("token")]
-        public IHttpActionResult Token()
+        public IHttpActionResult Token(TokenModel model)
         {
+            if (String.IsNullOrEmpty(model.grant_type))
+            {
+                return GenerateErrorResponse("invalid_request", "Le paramètre grant_type doit être présent une et une seule fois et avoir une valeur");
+            }
+
+            switch (model.grant_type)
+            {
+                case "authorization_code":
+                    return GenerateTokenForAuthorizationCodeGrant(model);
+                default:
+                    return GenerateErrorResponse("unsupported_grant_type", "grant_type non pris en charge");
+            }
+
+
+
+
             ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>()
             {
                 new Claim("test","plop")
             },
            OAuthDefaults.AuthenticationType);
 
+            AuthenticationTicket ticket = new AuthenticationTicket(identity, new AuthenticationProperties());
+            var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
+            ticket.Properties.IssuedUtc = currentUtc;
+            ticket.Properties.ExpiresUtc = currentUtc.Add(TimeSpan.FromMinutes(10));
+            var accesstoken = Startup.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
 
+            var plop = Startup.OAuthBearerOptions.AccessTokenFormat.Unprotect(accesstoken);
 
-            var tokenExpiration = TimeSpan.FromDays(900);
-            var props = new AuthenticationProperties()
+            var tt = plop;
+
+            return Ok(accesstoken);
+        }
+
+        private IHttpActionResult GenerateTokenForAuthorizationCodeGrant(TokenModel model)
+        {
+            try
             {
-                IssuedUtc = DateTime.UtcNow,
-                ExpiresUtc = DateTime.UtcNow.Add(tokenExpiration),
-            };
-            var ticket = new AuthenticationTicket(identity, props);
+                if (String.IsNullOrEmpty(model.code))
+                {
+                    return GenerateErrorResponse("invalid_request", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
+                }
 
-            // https://stackoverflow.com/questions/28406624/asp-net-oauth-how-is-access-token-generated?rq=1
-            // https://github.com/aspnet/AspNetKatana/tree/dev/src/Microsoft.Owin.Security
-            var aa = new OAuthBearerAuthenticationOptions()
+                if (String.IsNullOrEmpty(model.redirect_uri))
+                {
+                    return GenerateErrorResponse("invalid_request", "Le paramètre redirect_uri doit être présent une et une seule fois et avoir une valeur");
+                }
+
+                if (String.IsNullOrEmpty(model.client_id))
+                {
+                    return GenerateErrorResponse("invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
+                }
+              
+                var s = new ClientService()
+                {
+                    ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                    Factory = new EfRepositoriesFactory()
+                };
+
+                // vérification du paramètre d'authentification (basic)
+                if (Request.Headers.Authorization == null ||
+                    !Request.Headers.Authorization.Scheme.Equals("Basic", StringComparison.OrdinalIgnoreCase) ||
+                    !s.AreClientCredentialsValid(Request.Headers.Authorization.Parameter))
+                    return GenerateErrorResponse("unauthorized_client", "L'authentification du client a échoué");
+               
+                    //   Request.Headers.Authorization.
+
+                    if (!s.IsClientValidForAuthorizationCodeGrant(model.client_id, model.redirect_uri))
+                {
+                    return GenerateErrorResponse("invalid_client", "client non valide");
+                }
+
+                if (!s.IsCodeValidForAuthorizationCodeGrant(model.client_id, model.code))
+                {
+                    return GenerateErrorResponse("invalid_grant", "code incorrect");
+                }
+
+                return Ok();
+            }
+            catch(Exception ex)
             {
-                AccessTokenFormat = new SecureDataFormat<AuthenticationTicket>(new TicketSerializer(), new DpapiDataProtectionProvider("DaOAuth").Create(new string[] { "OAuth" }), new Base64UrlTextEncoder())
-            };
-
-            var accessToken = aa.AccessTokenFormat.Protect(ticket);
-
-            return Ok(accessToken);
+                return InternalServerError(ex);
+            }
         }
 
         private bool TryExtractUniqueRequestParamValue(string paramName, bool mustExist, out string value)
@@ -179,6 +237,32 @@ namespace DaOAuth.Api.Controllers.V1_0
         private string GenerateErrorMessage(string errorName, string errorDescription)
         {
             return String.Format("error={0}&error_description={1}", errorName, errorDescription);
+        }
+
+        private IHttpActionResult GenerateErrorResponse(string errorName, string errorDescription, string stateInfo)
+        {
+            if (String.IsNullOrEmpty(stateInfo))
+                return GenerateErrorResponse(errorName, errorDescription);
+
+            var myError = new
+            {
+                error = errorName,
+                error_description = errorDescription,
+                state = stateInfo
+            };
+
+            return ResponseMessage(Request.CreateResponse(HttpStatusCode.BadRequest, myError));
+        }
+
+        private IHttpActionResult GenerateErrorResponse(string errorName, string errorDescription)
+        {
+            var myError = new
+            {
+                error = errorName,
+                error_description = errorDescription
+            };
+
+            return ResponseMessage(Request.CreateResponse(HttpStatusCode.BadRequest, myError));
         }
     }
 }

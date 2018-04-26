@@ -27,6 +27,7 @@ create table auth.Clients
 (
 	Id integer not null primary key identity(1,1),
 	PublicId nvarchar(256) not null unique,
+	ClientSecret varbinary(50) null,
 	Name nvarchar(256) not null,
 	DefautRedirectUri nvarchar(max) null,
 	CreationDate datetime not null,
@@ -51,9 +52,11 @@ insert into auth.ClientsTypes(wording) values ('confidential')
 go
 
 /* données de test */
-insert into auth.Clients (publicId, Name, DefautRedirectUri, CreationDate, IsValid, FK_ClientType) 
-values ('G7H8q4yBhpinNo6H', 'test', 'http://www.google.fr', getdate(), 1, 2)
+insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, CreationDate, IsValid, FK_ClientType) 
+values ('G7H8q4yBhpinNo6H', HASHBYTES('SHA1', 'abc123456789'), 'test', 'http://www.google.fr', getdate(), 1, 2)
 go
 
 select * from auth.Clients
 select * from auth.Codes
+
+select HASHBYTES('SHA1', 'abc123456789')

@@ -7,6 +7,7 @@ namespace DaOAuth.Domain
     {
         public int Id { get; set; }
         public string PublicId { get; set; }
+        public byte[] ClientSecret { get; set; }
         public string Name { get; set; }
         public string DefautRedirectUri { get; set; }
         public DateTime CreationDate { get; set; }

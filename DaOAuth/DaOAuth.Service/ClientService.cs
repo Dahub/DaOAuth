@@ -1,34 +1,66 @@
 ﻿using DaOAuth.Domain;
 using System;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
-        public bool GetClientInfoForAuthorizationCodeGrant(string clientPublicId, string requestRedirectUri)
-        {    
-            try
+        public bool AreClientCredentialsValid(string basicAuthCredentials)
+        {
+            bool toReturn = false;
+
+            string credentials = Encoding.UTF8.GetString(Convert.FromBase64String(basicAuthCredentials));
+            int separatorIndex = credentials.IndexOf(':');
+            if (separatorIndex >= 0)
             {
-                if (String.IsNullOrEmpty(clientPublicId))
-                    return false;
+                string clientPublicId = credentials.Substring(0, separatorIndex);
+                string clientSecret = credentials.Substring(separatorIndex + 1);
 
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientRepo = Factory.GetClientRepository(context);
                     var client = clientRepo.GetByPublicId(clientPublicId);
 
-                    if (client == null)
-                        return false;
-
-                    if (!client.IsValid)
-                        return false;
-
-                    if (client.ClientTypeId != (int)EClientType.CONFIDENTIAL)
-                        return false;
-
-                    if (client.DefautRedirectUri != requestRedirectUri)
-                        return false;
+                    using (SHA1Managed sha1 = new SHA1Managed())
+                    {
+                        var toCompare = sha1.ComputeHash(Encoding.UTF8.GetBytes(clientSecret));
+                        toReturn = toCompare.SequenceEqual(client.ClientSecret);
+                    }
                 }
+            }
+
+            return toReturn;
+        }
+
+        public bool IsCodeValidForAuthorizationCodeGrant(string clientPublicId, string code)
+        {
+            if (String.IsNullOrEmpty(clientPublicId))
+                return false;
+
+            if (String.IsNullOrEmpty(code))
+                return false;
+
+            if (!CheckIfCodeIsValid(clientPublicId, code))
+                return false;
+
+            return true;
+        }
+
+        public bool IsClientValidForAuthorizationCodeGrant(string clientPublicId, string requestRedirectUri)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(clientPublicId))
+                    return false;
+
+                if (String.IsNullOrEmpty(requestRedirectUri))
+                    return false;
+
+                if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri))
+                    return false;
 
                 return true;
             }
@@ -100,6 +132,16 @@ namespace DaOAuth.Service
                     if (myClient == null || !myClient.IsValid)
                         throw new DaOauthServiceException(String.Format("Client {0} invalide", clientPublicId));
 
+                    var codeRepo = Factory.GetCodeRepository(context);
+
+                    // suppression des codes invalides
+                    long now = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
+                    foreach (var c in codeRepo.GetAllByClientId(clientPublicId))
+                    {
+                        if (!c.IsValid || c.ExpirationTimeStamp < now)
+                            codeRepo.Delete(c);
+                    }
+
                     // création d'un nouveau code
                     toReturn = new Code()
                     {
@@ -108,9 +150,8 @@ namespace DaOAuth.Service
                         IsValid = true,
                         ExpirationTimeStamp = new DateTimeOffset(DateTime.Now.AddMinutes(10)).ToUnixTimeSeconds()
                     };
-
-                    var codeRepo = Factory.GetCodeRepository(context);
                     codeRepo.Add(toReturn);
+
 
                     context.Commit();
                 }
@@ -125,6 +166,60 @@ namespace DaOAuth.Service
             }
 
             return toReturn;
+        }
+
+        private bool CheckIfCodeIsValid(string clientPublicId, string code)
+        {
+            using (var context = Factory.CreateContext(ConnexionString))
+            {
+                var codeRepo = Factory.GetCodeRepository(context);
+                var codes = codeRepo.GetAllByClientId(clientPublicId);
+
+                if (codes == null || codes.Count() == 0)
+                    return false;
+
+                Code myCode = codes.Where(c => c.CodeValue.Equals(code)).FirstOrDefault();
+                if (myCode == null)
+                    return false;
+
+                if (!myCode.IsValid)
+                    return false;
+
+                if (myCode.ExpirationTimeStamp < new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds())
+                    return false;
+
+                // on en profite pour rendre le code invalide : 1 seule demande possible
+                myCode.IsValid = false;
+
+                codeRepo.Update(myCode);
+
+                context.Commit();
+            }
+
+            return true;
+        }
+
+        private bool CheckIfClientIsValid(string clientPublicId, string requestRedirectUri)
+        {
+            using (var context = Factory.CreateContext(ConnexionString))
+            {
+                var clientRepo = Factory.GetClientRepository(context);
+                var client = clientRepo.GetByPublicId(clientPublicId);
+
+                if (client == null)
+                    return false;
+
+                if (!client.IsValid)
+                    return false;
+
+                if (client.ClientTypeId != (int)EClientType.CONFIDENTIAL)
+                    return false;
+
+                if (client.DefautRedirectUri != requestRedirectUri)
+                    return false;
+            }
+
+            return true;
         }
     }
 }
