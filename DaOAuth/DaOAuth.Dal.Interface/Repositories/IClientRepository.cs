@@ -6,5 +6,6 @@ namespace DaOAuth.Dal.Interface
     {
         void Add(Client toAdd);
         Client GetByPublicId(string publicId);
+        void Update(Client toUpdate);
     }
 }

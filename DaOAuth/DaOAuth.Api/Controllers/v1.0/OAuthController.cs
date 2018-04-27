@@ -25,6 +25,9 @@ namespace DaOAuth.Api.Controllers.V1_0
     [RoutePrefix("auth/v{version:ApiVersion}")]
     public class OAuthController : ApiController
     {
+        private const int ACCESS_TOKEN_LIFETIME = 10;
+        private const int REFRESH_TOKEN_LIFETIME = 525600; // un an
+
         [HttpGet]
         [Route("authorize")]
         public IHttpActionResult Authorize(string response_type)
@@ -134,27 +137,20 @@ namespace DaOAuth.Api.Controllers.V1_0
                 default:
                     return GenerateErrorResponse("unsupported_grant_type", "grant_type non pris en charge");
             }
+        }
 
-
-
-
+        private string GenerateToken(int minutesLifeTime)
+        {
             ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>()
             {
-                new Claim("test","plop")
-            },
-           OAuthDefaults.AuthenticationType);
+                new Claim("Server","DaOAuth")
+            }, OAuthDefaults.AuthenticationType);
 
             AuthenticationTicket ticket = new AuthenticationTicket(identity, new AuthenticationProperties());
             var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
             ticket.Properties.IssuedUtc = currentUtc;
-            ticket.Properties.ExpiresUtc = currentUtc.Add(TimeSpan.FromMinutes(10));
-            var accesstoken = Startup.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
-
-            var plop = Startup.OAuthBearerOptions.AccessTokenFormat.Unprotect(accesstoken);
-
-            var tt = plop;
-
-            return Ok(accesstoken);
+            ticket.Properties.ExpiresUtc = currentUtc.Add(TimeSpan.FromMinutes(minutesLifeTime));
+            return Startup.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
         }
 
         private IHttpActionResult GenerateTokenForAuthorizationCodeGrant(TokenModel model)
@@ -175,7 +171,7 @@ namespace DaOAuth.Api.Controllers.V1_0
                 {
                     return GenerateErrorResponse("invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
                 }
-              
+
                 var s = new ClientService()
                 {
                     ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
@@ -187,10 +183,10 @@ namespace DaOAuth.Api.Controllers.V1_0
                     !Request.Headers.Authorization.Scheme.Equals("Basic", StringComparison.OrdinalIgnoreCase) ||
                     !s.AreClientCredentialsValid(Request.Headers.Authorization.Parameter))
                     return GenerateErrorResponse("unauthorized_client", "L'authentification du client a échoué");
-               
-                    //   Request.Headers.Authorization.
 
-                    if (!s.IsClientValidForAuthorizationCodeGrant(model.client_id, model.redirect_uri))
+                //   Request.Headers.Authorization.
+
+                if (!s.IsClientValidForAuthorizationCodeGrant(model.client_id, model.redirect_uri))
                 {
                     return GenerateErrorResponse("invalid_client", "client non valide");
                 }
@@ -200,9 +196,19 @@ namespace DaOAuth.Api.Controllers.V1_0
                     return GenerateErrorResponse("invalid_grant", "code incorrect");
                 }
 
-                return Ok();
+                string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME);
+
+                s.UpdateRefreshTokenForClient(refreshToken, model.client_id);
+
+                return Ok(new
+                {
+                    access_token = GenerateToken(ACCESS_TOKEN_LIFETIME),
+                    token_type = "bearer",
+                    expires_in = ACCESS_TOKEN_LIFETIME * 60,
+                    refresh_token = refreshToken
+                });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return InternalServerError(ex);
             }

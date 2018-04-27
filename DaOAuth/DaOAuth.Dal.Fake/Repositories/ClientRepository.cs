@@ -53,5 +53,10 @@ namespace DaOAuth.Dal.Fake
                 }
             };
         }
+
+        public void Update(Client toUpdate)
+        {
+            
+        }
     }
 }

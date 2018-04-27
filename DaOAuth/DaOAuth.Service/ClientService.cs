@@ -74,6 +74,21 @@ namespace DaOAuth.Service
             }
         }
 
+        public void UpdateRefreshTokenForClient(string refreshToken, string clientPublicId)
+        {
+            using (var context = Factory.CreateContext(ConnexionString))
+            {
+                var clientRepo = Factory.GetClientRepository(context);
+                var client = clientRepo.GetByPublicId(clientPublicId);
+
+                client.RefreshToken = refreshToken;
+
+                clientRepo.Update(client);
+
+                context.Commit();
+            }
+        }
+
         public Client CreateNewClient(string name, string defaulRedirectUrl)
         {
             Client result = null;

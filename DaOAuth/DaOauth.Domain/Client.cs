@@ -12,6 +12,7 @@ namespace DaOAuth.Domain
         public string DefautRedirectUri { get; set; }
         public DateTime CreationDate { get; set; }
         public bool IsValid { get; set; }
+        public string RefreshToken { get; set; }
 
         public ICollection<Code> Codes { get; set; }
 

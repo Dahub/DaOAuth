@@ -19,5 +19,11 @@ namespace DaOAuth.Dal.EF
             return ((DaOAuthContext)Context).Clients.
                 Where(c => c.PublicId.Equals(publicId)).FirstOrDefault();
         }
+
+        public void Update(Client toUpdate)
+        {
+            ((DbContext)Context).Set<Client>().Attach(toUpdate);
+            ((DbContext)Context).Entry(toUpdate).State = EntityState.Modified;
+        }
     }
 }
