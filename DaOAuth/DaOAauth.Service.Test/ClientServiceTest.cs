@@ -43,11 +43,11 @@ namespace DaOAuth.Service.Test
         [Fact]
         public void AddCodeToClientTest()
         {
-            Assert.Throws<DaOauthServiceException>(() => cs.AddCodeToClient("abc"));
-            Assert.Equal<int>(32, cs.AddCodeToClient("test").Id);
-            Assert.Equal(16, cs.AddCodeToClient("test").ClientId);
-            Assert.Equal<int>(24, cs.AddCodeToClient("test").CodeValue.Length);
-            Assert.True(cs.AddCodeToClient("test").ExpirationTimeStamp <= new DateTimeOffset(DateTime.Now.AddMinutes(10)).ToUnixTimeSeconds());
+            Assert.Throws<DaOauthServiceException>(() => cs.GenerateAndAddCodeToClient("abc"));
+            Assert.Equal<int>(32, cs.GenerateAndAddCodeToClient("test").Id);
+            Assert.Equal(16, cs.GenerateAndAddCodeToClient("test").ClientId);
+            Assert.Equal<int>(24, cs.GenerateAndAddCodeToClient("test").CodeValue.Length);
+            Assert.True(cs.GenerateAndAddCodeToClient("test").ExpirationTimeStamp <= new DateTimeOffset(DateTime.Now.AddMinutes(10)).ToUnixTimeSeconds());
         }
     }
 }

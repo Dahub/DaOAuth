@@ -45,6 +45,8 @@
     <Compile Include="ClientType.cs" />
     <Compile Include="Code.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="User.cs" />
+    <Compile Include="UserClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

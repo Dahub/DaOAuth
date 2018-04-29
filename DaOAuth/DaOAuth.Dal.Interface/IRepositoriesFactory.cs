@@ -5,5 +5,6 @@
         IContext CreateContext(string connexion);
         IClientRepository GetClientRepository(IContext context);
         ICodeRepository GetCodeRepository(IContext context);
+        IUserRepository GetUserRepository(IContext context);
     }
 }

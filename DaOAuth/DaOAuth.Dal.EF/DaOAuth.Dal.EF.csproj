@@ -52,6 +52,7 @@
     <Compile Include="EfRepositoriesFactory.cs" />
     <Compile Include="Repositories\ClientRepository.cs" />
     <Compile Include="Repositories\CodeRepository.cs" />
+    <Compile Include="Repositories\UserRepository.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

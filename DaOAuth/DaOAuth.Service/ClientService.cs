@@ -12,24 +12,31 @@ namespace DaOAuth.Service
         {
             bool toReturn = false;
 
-            string credentials = Encoding.UTF8.GetString(Convert.FromBase64String(basicAuthCredentials));
-            int separatorIndex = credentials.IndexOf(':');
-            if (separatorIndex >= 0)
+            try
             {
-                string clientPublicId = credentials.Substring(0, separatorIndex);
-                string clientSecret = credentials.Substring(separatorIndex + 1);
-
-                using (var context = Factory.CreateContext(ConnexionString))
+                string credentials = Encoding.UTF8.GetString(Convert.FromBase64String(basicAuthCredentials));
+                int separatorIndex = credentials.IndexOf(':');
+                if (separatorIndex >= 0)
                 {
-                    var clientRepo = Factory.GetClientRepository(context);
-                    var client = clientRepo.GetByPublicId(clientPublicId);
+                    string clientPublicId = credentials.Substring(0, separatorIndex);
+                    string clientSecret = credentials.Substring(separatorIndex + 1);
 
-                    using (SHA1Managed sha1 = new SHA1Managed())
+                    using (var context = Factory.CreateContext(ConnexionString))
                     {
-                        var toCompare = sha1.ComputeHash(Encoding.UTF8.GetBytes(clientSecret));
-                        toReturn = toCompare.SequenceEqual(client.ClientSecret);
+                        var clientRepo = Factory.GetClientRepository(context);
+                        var client = clientRepo.GetByPublicId(clientPublicId);
+
+                        return AreEqualsSha1(clientSecret, client.ClientSecret);
                     }
                 }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors de la vérification des credentials", ex);
             }
 
             return toReturn;
@@ -37,16 +44,27 @@ namespace DaOAuth.Service
 
         public bool IsCodeValidForAuthorizationCodeGrant(string clientPublicId, string code)
         {
-            if (String.IsNullOrEmpty(clientPublicId))
-                return false;
+            try
+            {
+                if (String.IsNullOrEmpty(clientPublicId))
+                    return false;
 
-            if (String.IsNullOrEmpty(code))
-                return false;
+                if (String.IsNullOrEmpty(code))
+                    return false;
 
-            if (!CheckIfCodeIsValid(clientPublicId, code))
-                return false;
+                if (!CheckIfCodeIsValid(clientPublicId, code))
+                    return false;
 
-            return true;
+                return true;
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors de la vérification de la validité du code client", ex);
+            }
         }
 
         public bool IsClientValidForAuthorizationCodeGrant(string clientPublicId, string requestRedirectUri)
@@ -76,6 +94,8 @@ namespace DaOAuth.Service
 
         public void UpdateRefreshTokenForClient(string refreshToken, string clientPublicId)
         {
+            try
+            { 
             using (var context = Factory.CreateContext(ConnexionString))
             {
                 var clientRepo = Factory.GetClientRepository(context);
@@ -86,6 +106,15 @@ namespace DaOAuth.Service
                 clientRepo.Update(client);
 
                 context.Commit();
+            }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la mise à jour du refresh token du client {0}", clientPublicId), ex);
             }
         }
 
@@ -133,7 +162,7 @@ namespace DaOAuth.Service
             return result;
         }
 
-        public Code AddCodeToClient(string clientPublicId)
+        public Code GenerateAndAddCodeToClient(string clientPublicId)
         {
             Code toReturn = null;
 
@@ -163,10 +192,9 @@ namespace DaOAuth.Service
                         ClientId = myClient.Id,
                         CodeValue = RandomMaker.GenerateRandomString(24),
                         IsValid = true,
-                        ExpirationTimeStamp = new DateTimeOffset(DateTime.Now.AddMinutes(10)).ToUnixTimeSeconds()
+                        ExpirationTimeStamp = new DateTimeOffset(DateTime.Now.AddMinutes(2)).ToUnixTimeSeconds()
                     };
                     codeRepo.Add(toReturn);
-
 
                     context.Commit();
                 }

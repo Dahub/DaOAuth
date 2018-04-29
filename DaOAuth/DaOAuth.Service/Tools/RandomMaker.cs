@@ -24,7 +24,6 @@ namespace DaOAuth.Service
                 }
             }
             return s;
-
         }
     }
 }

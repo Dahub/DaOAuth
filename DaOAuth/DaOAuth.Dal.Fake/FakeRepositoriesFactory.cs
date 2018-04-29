@@ -9,6 +9,14 @@ namespace DaOAuth.Dal.Fake
             return new FakeContext();
         }
 
+        public IUserRepository GetUserRepository(IContext context)
+        {
+            return new UserRepository()
+            {
+                Context = context,
+            };
+        }
+
         public IClientRepository GetClientRepository(IContext context)
         {
             return new ClientRepository()

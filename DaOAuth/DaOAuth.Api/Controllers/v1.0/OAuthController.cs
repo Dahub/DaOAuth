@@ -96,7 +96,7 @@ namespace DaOAuth.Api.Controllers.V1_0
                 // tout est ok, on peut générer un nouveau code pour cette demande
                 if (!isError)
                 {
-                    var myCode = cs.AddCodeToClient(client_id);
+                    var myCode = cs.GenerateAndAddCodeToClient(client_id);
                     location = String.Concat(redirectUri, "?code=", myCode.CodeValue);
                     if (!String.IsNullOrEmpty(myState))
                         location = String.Concat(location, "&state=", myState);

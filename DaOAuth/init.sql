@@ -32,6 +32,7 @@ create table auth.Clients
 	DefautRedirectUri nvarchar(max) null,
 	CreationDate datetime not null,
 	IsValid bit not null,
+	RefreshToken nvarchar(512) null,
 	FK_ClientType integer not null foreign key references auth.ClientsTypes(Id)
 ) 
 go
@@ -43,6 +44,28 @@ create table auth.Codes
 	ExpirationTimeStamp bigint not null,
 	IsValid bit not null,
 	FK_Client integer not null foreign key references auth.Clients(Id)
+)
+go
+
+create table auth.Users
+(
+	Id integer not null primary key identity(1,1),
+	UserName nvarchar(32) not null unique,
+	Password varbinary(50) null,
+	FullName nvarchar(256) null,
+	BirthDate datetime null,
+	CreationDate datetime not null,
+	IsValid bit not null
+)
+go
+
+create table auth.UsersClients
+(
+	Id integer not null primary key identity(1,1),
+	FK_User integer not null foreign key references auth.Users(Id),
+	FK_Client integer not null foreign key references auth.Clients(Id),
+	CreationDate datetime not null,
+	UserPublicId integer not null unique
 )
 go
 

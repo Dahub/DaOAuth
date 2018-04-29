@@ -14,11 +14,21 @@ namespace DaOAuth.Dal.EF
         public DbSet<Client> Clients { get; set; }
         public DbSet<Code> Codes { get; set; }
         public DbSet<ClientType> ClientsTypes { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("auth");
 
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<User>().HasKey<int>(c => c.Id);
+            modelBuilder.Entity<User>().Property(p => p.BirthDate).HasColumnName("BirthDate").HasColumnType("datetime").IsOptional();
+            modelBuilder.Entity<User>().Property(p => p.CreationDate).HasColumnName("CreationDate").HasColumnType("datetime").IsRequired();
+            modelBuilder.Entity<User>().Property(p => p.FullName).HasColumnName("FullName").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
+            modelBuilder.Entity<User>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
+            modelBuilder.Entity<User>().Property(p => p.Password).HasColumnName("Password").HasColumnType("varbinary").HasMaxLength(50);
+            modelBuilder.Entity<User>().Property(p => p.UserName).HasColumnName("UserName").HasColumnType("nvarchar").HasMaxLength(32).IsRequired();
+          
             modelBuilder.Entity<ClientType>().ToTable("ClientsTypes");
             modelBuilder.Entity<ClientType>().HasKey<int>(c => c.Id);
             modelBuilder.Entity<ClientType>().Property(p => p.Wording).HasColumnName("Wording").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
@@ -44,6 +54,15 @@ namespace DaOAuth.Dal.EF
             modelBuilder.Entity<Code>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
             modelBuilder.Entity<Code>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Code>().HasRequired<Client>(c => c.Client).WithMany(g => g.Codes).HasForeignKey<int>(c => c.ClientId);
+
+            modelBuilder.Entity<UserClient>().ToTable("UsersClients");
+            modelBuilder.Entity<UserClient>().HasKey<int>(c => c.Id);
+            modelBuilder.Entity<UserClient>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<UserClient>().HasRequired<Client>(c => c.Client).WithMany(g => g.UsersClients).HasForeignKey<int>(c => c.ClientId);
+            modelBuilder.Entity<UserClient>().Property(p => p.UserId).HasColumnName("FK_User").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<UserClient>().HasRequired<User>(c => c.User).WithMany(g => g.UsersClients).HasForeignKey<int>(c => c.UserId);
+            modelBuilder.Entity<UserClient>().Property(p => p.CreationDate).HasColumnName("CreationDate").HasColumnType("datetime").IsRequired();
+            modelBuilder.Entity<UserClient>().Property(p => p.UserPublicId).HasColumnName("UserPublicId").HasColumnType("int").IsRequired();
         }
 
         public void Commit()
