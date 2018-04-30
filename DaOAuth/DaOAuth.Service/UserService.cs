@@ -16,22 +16,15 @@ namespace DaOAuth.Service
                     var userRepo = Factory.GetUserRepository(context);
 
                     var user = userRepo.GetByUserName(userName);
-                    if(user != null)
+                    if (user != null && this.AreEqualsSha1(password, user.Password))
                     {
-                        if(this.AreEqualsSha1(password, user.Password))
+                        toReturn = new UserDto()
                         {
-                            toReturn = new UserDto()
-                            {
-                                BirthDate = user.BirthDate,
-                                FullName = user.FullName,
-                                Id = user.Id,
-                                UserName = user.UserName
-                            };
-                        }
-                        else
-                        {
-                            throw new DaOauthServiceException("Username ou password incorrects");
-                        }
+                            BirthDate = user.BirthDate,
+                            FullName = user.FullName,
+                            Id = user.Id,
+                            UserName = user.UserName
+                        };
                     }
                 }
             }
@@ -42,6 +35,30 @@ namespace DaOAuth.Service
             catch (Exception ex)
             {
                 throw new DaOauthServiceException(String.Format("Erreur lors de la récupération de l'utilisateur {0}", userName), ex);
+            }
+
+            return toReturn;
+        }
+
+        public bool CheckIfUserExist(string userName)
+        {
+            bool toReturn = false;
+
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var userRepo = Factory.GetUserRepository(context);
+                    toReturn = userRepo.GetByUserName(userName) != null;
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'existance de l'utilisateur {0}", userName), ex);
             }
 
             return toReturn;

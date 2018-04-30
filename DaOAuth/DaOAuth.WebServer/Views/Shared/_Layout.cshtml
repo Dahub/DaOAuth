@@ -7,7 +7,16 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link href="~/Content/bootstrap-datepicker.min.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
     <link href="~/Content/Site.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="~/Scripts/bootstrap-datepicker.min.js"></script>
+    <script src="~/Scripts/locales/bootstrap-datepicker.fr.min.js"></script>
+    <script src="~/Scripts/bootbox.min.js"></script>
     <title>@ViewBag.Title</title>
 </head>
 <body>
@@ -22,29 +31,53 @@
                 <li class="nav-item active">
                     <a class="nav-link" href="/Home/Index">Home <span class="sr-only">(current)</span></a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/User/Create">Register</a>
-                </li>
+                @if (!User.Identity.IsAuthenticated)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" href="/User/Create">Register</a>
+                    </li>
+                }
             </ul>
-            <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="text" placeholder="UserName" aria-label="User name">
-                <input class="form-control mr-sm-2" type="text" placeholder="Password" aria-label="Password">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Login</button>
-            </form>
+            @if (!User.Identity.IsAuthenticated)
+            {
+                <div class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" id="userName" type="text" placeholder="UserName" aria-label="User name">
+                    <input class="form-control mr-sm-2" id="password" type="password" placeholder="Password" aria-label="Password">
+                    <button class="btn btn-outline-success my-2 my-sm-0" id="loginBtn" type="button">Login</button>
+                </div>
+            }
+            else
+            {
+                <a href="/User/Logout"><i class="fa fa-sign-out fa-2x"></i></a>
+            }
         </div>
     </nav>
 
     <main role="main" class="container">
-
-
         @RenderBody()
-
     </main>
 
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $('#loginBtn').bind('click', function () {
+            $.ajax({
+                type: 'POST',
+                url: '/User/Login',
+                data: { userName: $('#userName').val(), password: $('#password').val() },
+                error: function (jqXHR, exception) {
+                    alert(exception);
+                }
+            }).done(function (data) {
+                console.log(data);
+                console.log(data.logged);
+                
+                if (data.logged == 'false')
+                    bootbox.alert('login ou mot de passe incorrect');
+
+                if (data.logged == 'true')
+                    window.location.replace('/Home/Index');
+            })
+        });
+    </script>
+
 </body>
 </html>

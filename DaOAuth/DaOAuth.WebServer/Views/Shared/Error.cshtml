@@ -1,0 +1,9 @@
+﻿@model System.Web.Mvc.HandleErrorInfo
+
+@{
+    ViewBag.Title = "Erreur";
+}
+
+<h2>Oups, l'application a rencontré une erreur :-(</h2>
+<h4>@Model.Exception.Message</h4>
+<p><a href="/Home/Index">Retour à l'accueil</a></p>

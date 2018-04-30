@@ -81,5 +81,6 @@ go
 
 select * from auth.Clients
 select * from auth.Codes
+select * from auth.Users
 
 select HASHBYTES('SHA1', 'abc123456789')
