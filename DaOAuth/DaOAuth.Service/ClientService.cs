@@ -77,7 +77,7 @@ namespace DaOAuth.Service
                 if (String.IsNullOrEmpty(requestRedirectUri))
                     return false;
 
-                if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri))
+                if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri, EClientType.CONFIDENTIAL))
                     return false;
 
                 return true;
@@ -242,7 +242,7 @@ namespace DaOAuth.Service
             return true;
         }
 
-        private bool CheckIfClientIsValid(string clientPublicId, string requestRedirectUri)
+        private bool CheckIfClientIsValid(string clientPublicId, string requestRedirectUri, EClientType clientType)
         {
             using (var context = Factory.CreateContext(ConnexionString))
             {
@@ -255,7 +255,7 @@ namespace DaOAuth.Service
                 if (!client.IsValid)
                     return false;
 
-                if (client.ClientTypeId != (int)EClientType.CONFIDENTIAL)
+                if (client.ClientTypeId != (int)clientType)
                     return false;
 
                 if (client.DefautRedirectUri != requestRedirectUri)
