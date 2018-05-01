@@ -13,6 +13,19 @@ namespace DaOAuth.WebServer.Controllers
     public class UserController : Controller
     {
         [AllowAnonymous]
+        [HttpGet]
+        public ActionResult LoginAuthorize(string response_type, string client_id, string state, string redirect_uri)
+        {
+            return View(new LoginAuthorizeViewModel()
+            {
+                ClientId = client_id,
+                RedirectUrl = redirect_uri,
+                ResponseType = response_type,
+                State = state
+            });
+        }
+
+        [AllowAnonymous]
         [HttpPost]
         public ActionResult Login(string userName, string password)
         {

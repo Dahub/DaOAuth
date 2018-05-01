@@ -76,7 +76,7 @@ go
 
 /* données de test */
 insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, CreationDate, IsValid, FK_ClientType) 
-values ('G7H8q4yBhpinNo6H', HASHBYTES('SHA1', 'abc123456789'), 'test', 'http://www.google.fr', getdate(), 1, 2)
+values ('G7H8q4yBhpinNo6H', HASHBYTES('SHA1', 'abc123456789'), 'test', 'http://perdu.com', getdate(), 1, 2)
 go
 
 select * from auth.Clients

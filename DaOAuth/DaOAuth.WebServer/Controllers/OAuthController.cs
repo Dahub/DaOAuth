@@ -30,7 +30,13 @@ namespace DaOAuth.WebServer.Controllers
 
             // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
             if (!User.Identity.IsAuthenticated)
-                return RedirectToAction("/User/Login");
+                return RedirectToAction("LoginAuthorize", "User", new
+                {
+                    response_type = response_type,
+                    client_id =client_id,
+                    state = state,
+                    redirect_uri = redirect_uri
+                });
 
             var cs = new ClientService()
             {
@@ -40,7 +46,6 @@ namespace DaOAuth.WebServer.Controllers
 
             if (!cs.IsClientValidForAuthorizationCodeGrant(client_id, redirect_uri))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
-
 
             // vérifier que l'utilisateur a bien autorisé le client, sinon, prompt d'autorisation
 

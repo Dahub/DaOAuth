@@ -1,7 +1,6 @@
 ﻿using DaOAuth.Domain;
 using System;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace DaOAuth.Service

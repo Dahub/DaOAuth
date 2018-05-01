@@ -1,4 +1,10 @@
-﻿<!doctype html>
+﻿@model DaOAuth.WebServer.Models.LoginAuthorizeViewModel
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
 <html lang="en">
 <head>
     <!-- Required meta tags -->
@@ -16,44 +22,29 @@
     <script src="~/Scripts/locales/bootstrap-datepicker.fr.min.js"></script>
     <script src="~/Scripts/bootbox.min.js"></script>
 
-    <title>@ViewBag.Title</title>
+    <title>Connexion</title>
 </head>
 <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="/Home/Index">DaOAuth</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="/Home/Index">Home <span class="sr-only">(current)</span></a>
-                </li>
-                @if (!User.Identity.IsAuthenticated)
-                {
-                    <li class="nav-item">
-                        <a class="nav-link" href="/User/Create">Register</a>
-                    </li>
-                }
-            </ul>
-            @if (!User.Identity.IsAuthenticated)
-            {
-                <div class="form-inline my-2 my-lg-0">
-                    <input class="form-control mr-sm-2" id="userName" type="text" placeholder="UserName" aria-label="User name">
-                    <input class="form-control mr-sm-2" id="password" type="password" placeholder="Password" aria-label="Password">
-                    <button class="btn btn-outline-success my-2 my-sm-0" id="loginBtn" type="button">Login</button>
-                </div>
-            }
-            else
-            {
-                <a href="/User/Logout"><i class="fa fa-sign-out fa-2x"></i></a>
-            }
-        </div>
+        <strong>DaOAuth</strong>     
     </nav>
 
     <main role="main" class="container">
-        @RenderBody()
+        <div class="container">
+            <div class="row">
+                <div class="col-4 offset-4">
+                    <input class="form-control" id="userName" type="text" placeholder="UserName" aria-label="User name">
+                </div>
+                <div class="col-4 offset-4">
+                    <input class="form-control" id="password" type="password" placeholder="Password" aria-label="Password">
+                </div>
+                <div class="col-4 offset-4">
+                    <button class="btn btn-outline-success btn-block" id="loginBtn" type="button">Login</button>
+                </div>
+            </div>
+        </div>
+
+
     </main>
 
     <script type="text/javascript">
@@ -65,11 +56,11 @@
                 error: function (jqXHR, exception) {
                     alert(exception);
                 }
-            }).done(function (data) {                
+            }).done(function (data) {
                 if (data.logged == 'false')
                     bootbox.alert('login ou mot de passe incorrect');
                 if (data.logged == 'true')
-                    window.location.replace('/Home/Index');
+                    window.location.replace('/OAuth/authorize?response_type=@Model.ResponseType&client_id=@Model.ClientId&state=@Model.State&redirect_uri=@Model.RedirectUrl');
             })
         });
     </script>
