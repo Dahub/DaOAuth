@@ -15,6 +15,7 @@ namespace DaOAuth.Dal.EF
         public DbSet<Code> Codes { get; set; }
         public DbSet<ClientType> ClientsTypes { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserClient> UsersClients { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

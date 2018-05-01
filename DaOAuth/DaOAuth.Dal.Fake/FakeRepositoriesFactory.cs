@@ -32,5 +32,13 @@ namespace DaOAuth.Dal.Fake
                 Context = context
             };
         }
+
+        public IUserClientRepository GetUserClientRepository(IContext context)
+        {
+            return new UserClientRepository()
+            {
+                Context = context
+            };
+        }
     }
 }
