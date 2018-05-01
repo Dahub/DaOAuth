@@ -12,6 +12,47 @@ namespace DaOAuth.WebServer.Controllers
     [HandleError]
     public class UserController : Controller
     {
+        [Authorize]
+        [HttpGet]
+        public ActionResult AuthorizeClient(string response_type, string client_id, string state, string redirect_uri)
+        {
+            var cs = new ClientService()
+            {
+                ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                Factory = new EfRepositoriesFactory()
+            };
+
+            return View(new AuthorizeClientViewModel()
+            {
+                ClientId = client_id,
+                RedirectUrl = redirect_uri,
+                ResponseType = response_type,
+                State = state,
+                ClientName = cs.GetClientByPublicId(client_id).Name
+            });
+        }
+
+        [Authorize]
+        [HttpPost]
+        public ActionResult AuthorizeClient(AuthorizeClientViewModel model)
+        {
+            var cs = new ClientService()
+            {
+                ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                Factory = new EfRepositoriesFactory()
+            };
+
+            cs.AuthorizeClientForUser(model.ClientId, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier));
+
+            return RedirectToAction("authorize", "OAuth", new
+            {
+                response_type = model.ResponseType,
+                client_id = model.ClientId,
+                state = model.State,
+                redirect_uri = model.RedirectUrl
+            });
+        }
+
         [AllowAnonymous]
         [HttpGet]
         public ActionResult LoginAuthorize(string response_type, string client_id, string state, string redirect_uri)

@@ -66,7 +66,7 @@ namespace DaOAuth.Service
                     }
                 }
             }
-            return s
+            return s;
         }
     }
 }

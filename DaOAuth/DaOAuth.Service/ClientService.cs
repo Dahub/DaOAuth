@@ -7,6 +7,34 @@ namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
+        public Client GetClientByPublicId(string publicId)
+        {
+            Client toReturn = null;
+
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientRepo = Factory.GetClientRepository(context);
+                    var client = clientRepo.GetByPublicId(publicId);
+                    if (client == null || !client.IsValid)
+                        throw new DaOauthServiceException(String.Format("Client {0} introuvable ou invalide", publicId));
+
+                    toReturn = client;
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la récupération du client {0}", publicId), ex);
+            }
+
+            return toReturn;
+        }
+
         public bool IsClientAuthoryzeByUser(string publicId, string userName)
         {
             bool toReturn = false;
@@ -33,7 +61,6 @@ namespace DaOAuth.Service
 
         public void AuthorizeClientForUser(string publicId, string userName)
         {
-
             try
             {
                 using (var context = Factory.CreateContext(ConnexionString))

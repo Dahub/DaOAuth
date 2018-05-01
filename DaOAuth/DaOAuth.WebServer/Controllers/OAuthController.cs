@@ -1,7 +1,9 @@
 ﻿using DaOAuth.Dal.EF;
 using DaOAuth.Service;
+using Microsoft.AspNet.Identity;
 using System;
 using System.Net;
+using System.Security.Claims;
 using System.Web.Mvc;
 
 namespace DaOAuth.WebServer.Controllers
@@ -28,16 +30,6 @@ namespace DaOAuth.WebServer.Controllers
             if (String.IsNullOrEmpty(client_id))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre client_id est requis", state));
 
-            // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
-            if (!User.Identity.IsAuthenticated)
-                return RedirectToAction("LoginAuthorize", "User", new
-                {
-                    response_type = response_type,
-                    client_id =client_id,
-                    state = state,
-                    redirect_uri = redirect_uri
-                });
-
             var cs = new ClientService()
             {
                 ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
@@ -47,7 +39,26 @@ namespace DaOAuth.WebServer.Controllers
             if (!cs.IsClientValidForAuthorizationCodeGrant(client_id, redirect_uri))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
 
+            // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToAction("LoginAuthorize", "User", new
+                {
+                    response_type = response_type,
+                    client_id = client_id,
+                    state = state,
+                    redirect_uri = redirect_uri
+                });
+
+
             // vérifier que l'utilisateur a bien autorisé le client, sinon, prompt d'autorisation
+            if(!cs.IsClientAuthoryzeByUser(client_id, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier)))
+                return RedirectToAction("AuthorizeClient", "User", new
+                {
+                    response_type = response_type,
+                    client_id = client_id,
+                    state = state,
+                    redirect_uri = redirect_uri
+                });
 
             return new HttpStatusCodeResult(HttpStatusCode.OK);
         }
