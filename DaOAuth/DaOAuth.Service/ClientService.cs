@@ -7,6 +7,97 @@ namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
+        public bool IsClientAuthoryzeByUser(string publicId, string userName)
+        {
+            bool toReturn = false;
+
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+                    toReturn = clientUserRepo.GetUserClientByUserNameAndClientPublicId(publicId, userName) != null;
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'authorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+            }
+
+            return toReturn;
+        }
+
+        public void AuthorizeClientForUser(string publicId, string userName)
+        {
+
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientRepo = Factory.GetClientRepository(context);
+                    var userRepo = Factory.GetUserRepository(context);
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+
+                    var client = clientRepo.GetByPublicId(publicId);
+                    if (client == null || !client.IsValid)
+                        throw new DaOauthServiceException(String.Format("Client {0} introuvable ou invalide", publicId));
+
+                    var user = userRepo.GetByUserName(userName);
+                    if (user == null || !user.IsValid)
+                        throw new DaOauthServiceException(String.Format("Utilisateur {0} introuvable ou invalide", userName));
+
+                    clientUserRepo.Add(new UserClient()
+                    {
+                        ClientId = client.Id,
+                        CreationDate = DateTime.Now,
+                        UserId = user.Id,
+                        UserPublicId = RandomMaker.GenerateRandomInt(8)
+                    });
+
+                    context.Commit();
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de l'authorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+            }
+        }
+
+        public void RevokeClientForUser(string publicId, string userName)
+        {
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(publicId, userName);
+
+                    if (clientUser == null)
+                        throw new DaOauthServiceException("Impossible de révoquer, authorisation introuvable");
+
+                    clientUserRepo.Delete(clientUser);
+
+                    context.Commit();
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la révocation de l'authorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+            }
+        }
+
         public bool AreClientCredentialsValid(string basicAuthCredentials)
         {
             bool toReturn = false;
@@ -94,18 +185,18 @@ namespace DaOAuth.Service
         public void UpdateRefreshTokenForClient(string refreshToken, string clientPublicId)
         {
             try
-            { 
-            using (var context = Factory.CreateContext(ConnexionString))
             {
-                var clientRepo = Factory.GetClientRepository(context);
-                var client = clientRepo.GetByPublicId(clientPublicId);
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientRepo = Factory.GetClientRepository(context);
+                    var client = clientRepo.GetByPublicId(clientPublicId);
 
-                client.RefreshToken = refreshToken;
+                    client.RefreshToken = refreshToken;
 
-                clientRepo.Update(client);
+                    clientRepo.Update(client);
 
-                context.Commit();
-            }
+                    context.Commit();
+                }
             }
             catch (DaOauthServiceException)
             {
