@@ -35,7 +35,7 @@ namespace DaOAuth.Service
             return toReturn;
         }
 
-        public bool IsClientAuthoryzeByUser(string publicId, string userName)
+        public bool HasUserAuthorizeOrDeniedClientAccess(string publicId, string userName)
         {
             bool toReturn = false;
 
@@ -53,13 +53,38 @@ namespace DaOAuth.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'authorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
             }
 
             return toReturn;
         }
 
-        public void AuthorizeClientForUser(string publicId, string userName)
+        public bool IsClientAuthorizeByUser(string publicId, string userName)
+        {
+            bool toReturn = false;
+
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(publicId, userName);
+                    toReturn = clientUser != null && clientUser.IsValid;
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+            }
+
+            return toReturn;
+        }
+
+        public void AuthorizeOrDeniedClientForUser(string publicId, string userName, bool authorize)
         {
             try
             {
@@ -82,7 +107,8 @@ namespace DaOAuth.Service
                         ClientId = client.Id,
                         CreationDate = DateTime.Now,
                         UserId = user.Id,
-                        UserPublicId = RandomMaker.GenerateRandomInt(8)
+                        UserPublicId = RandomMaker.GenerateRandomInt(8),
+                        IsValid = authorize
                     });
 
                     context.Commit();

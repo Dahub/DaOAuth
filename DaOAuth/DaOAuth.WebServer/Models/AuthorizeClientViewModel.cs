@@ -7,5 +7,6 @@
         public string State { get; set; }
         public string RedirectUrl { get; set; }
         public string ClientName { get; set; }
+        public bool IsValid { get; set; }
     }
 }

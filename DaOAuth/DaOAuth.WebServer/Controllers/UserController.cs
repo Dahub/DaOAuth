@@ -28,7 +28,8 @@ namespace DaOAuth.WebServer.Controllers
                 RedirectUrl = redirect_uri,
                 ResponseType = response_type,
                 State = state,
-                ClientName = cs.GetClientByPublicId(client_id).Name
+                ClientName = cs.GetClientByPublicId(client_id).Name,
+                IsValid = true
             });
         }
 
@@ -42,7 +43,7 @@ namespace DaOAuth.WebServer.Controllers
                 Factory = new EfRepositoriesFactory()
             };
 
-            cs.AuthorizeClientForUser(model.ClientId, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier));
+            cs.AuthorizeOrDeniedClientForUser(model.ClientId, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier), model.IsValid);
 
             return RedirectToAction("authorize", "OAuth", new
             {

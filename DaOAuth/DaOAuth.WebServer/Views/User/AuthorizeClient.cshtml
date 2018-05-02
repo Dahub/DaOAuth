@@ -37,18 +37,25 @@
                 </div>
 
                 <div class="col-6 offset-2">
-                    <form method="post">
+                    <form method="post" id="myForm">
                         @Html.HiddenFor(m => m.ClientId)
                         @Html.HiddenFor(m => m.RedirectUrl)
                         @Html.HiddenFor(m => m.ResponseType)
                         @Html.HiddenFor(m => m.State)
-                        <button class="btn btn-outline-success btn-block" type="submit">Accepter</button>
-                    </form>
-                    <a href="" class="btn btn-outline-success btn-block">Annuler</a>
-                </div>
+                        @Html.HiddenFor(m => m.IsValid)
+                    <button class="btn btn-outline-success btn-block" type="submit">Accepter</button>
+                </form>
+                <button class="btn btn-outline-success btn-block" id="btnCancel" type="button">Annuler</button>
             </div>
         </div>
+    </div>
 
+    <script type="text/javascript">
+        $('#btnCancel').bind('click', function () {
+            $('#IsValid').val(false);
+            $('#myForm').submit();
+        });
+    </script>
 
     </main>
 

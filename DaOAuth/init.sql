@@ -65,7 +65,8 @@ create table auth.UsersClients
 	FK_User integer not null foreign key references auth.Users(Id),
 	FK_Client integer not null foreign key references auth.Clients(Id),
 	CreationDate datetime not null,
-	UserPublicId integer not null unique
+	UserPublicId integer not null unique,
+	IsValid bit not null
 )
 go
 
@@ -82,5 +83,8 @@ go
 select * from auth.Clients
 select * from auth.Codes
 select * from auth.Users
+select * from auth.UsersClients
 
-select HASHBYTES('SHA1', 'abc123456789')
+--delete from auth.UsersClients
+
+-- select HASHBYTES('SHA1', 'abc123456789')

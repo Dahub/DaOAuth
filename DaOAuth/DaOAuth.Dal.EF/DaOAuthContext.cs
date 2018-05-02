@@ -64,6 +64,7 @@ namespace DaOAuth.Dal.EF
             modelBuilder.Entity<UserClient>().HasRequired<User>(c => c.User).WithMany(g => g.UsersClients).HasForeignKey<int>(c => c.UserId);
             modelBuilder.Entity<UserClient>().Property(p => p.CreationDate).HasColumnName("CreationDate").HasColumnType("datetime").IsRequired();
             modelBuilder.Entity<UserClient>().Property(p => p.UserPublicId).HasColumnName("UserPublicId").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<UserClient>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
         }
 
         public void Commit()
