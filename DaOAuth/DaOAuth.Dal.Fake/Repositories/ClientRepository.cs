@@ -1,6 +1,7 @@
 ﻿using DaOAuth.Dal.Interface;
 using DaOAuth.Domain;
 using System;
+using System.Collections.Generic;
 
 namespace DaOAuth.Dal.Fake
 {
@@ -57,6 +58,11 @@ namespace DaOAuth.Dal.Fake
         public void Update(Client toUpdate)
         {
             
+        }
+
+        public IEnumerable<Client> GetAllByUserName(string userName)
+        {
+            return new List<Client>();
         }
     }
 }

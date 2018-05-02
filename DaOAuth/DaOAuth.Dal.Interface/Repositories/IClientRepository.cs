@@ -1,4 +1,5 @@
 ﻿using DaOAuth.Domain;
+using System.Collections.Generic;
 
 namespace DaOAuth.Dal.Interface
 {
@@ -7,5 +8,6 @@ namespace DaOAuth.Dal.Interface
         void Add(Client toAdd);
         Client GetByPublicId(string publicId);
         void Update(Client toUpdate);
+        IEnumerable<Client> GetAllByUserName(string userName);
     }
 }

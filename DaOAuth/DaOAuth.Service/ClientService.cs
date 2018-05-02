@@ -1,5 +1,6 @@
 ﻿using DaOAuth.Domain;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -7,9 +8,33 @@ namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
-        public Client GetClientByPublicId(string publicId)
+        public IEnumerable<ClientDto> GetClientsByUserName(string userName)
         {
-            Client toReturn = null;
+            IList<ClientDto> toReturn = new List<ClientDto>();
+
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientRepo = Factory.GetClientRepository(context);
+                    toReturn = clientRepo.GetAllByUserName(userName).ToDto();
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la récupération des clients de l'utilisateur {0}", userName), ex);
+            }
+
+            return toReturn;
+        }
+
+        public ClientDto GetClientByPublicId(string publicId)
+        {
+            ClientDto toReturn = null;
 
             try
             {
@@ -20,7 +45,7 @@ namespace DaOAuth.Service
                     if (client == null || !client.IsValid)
                         throw new DaOauthServiceException(String.Format("Client {0} introuvable ou invalide", publicId));
 
-                    toReturn = client;
+                    toReturn = client.ToDto();
                 }
             }
             catch (DaOauthServiceException)

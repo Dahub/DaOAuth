@@ -15,7 +15,7 @@ namespace DaOAuth.WebServer.Controllers
     [HandleError]
     public class OAuthController : Controller
     {
-        private const int ACCESS_TOKEN_LIFETIME = 10;
+        private const int ACCESS_TOKEN_LIFETIME = 10; // temps en minutes
         private const int REFRESH_TOKEN_LIFETIME = 5256000; // 10 ans
 
         [AllowAnonymous]
@@ -66,7 +66,7 @@ namespace DaOAuth.WebServer.Controllers
                     redirect_uri = redirect_uri
                 });
 
-            // si oui, l'a t'il authorisé ?
+            // l'utilisateur a t'il authorisé le client ?
             if (!cs.IsClientAuthorizeByUser(client_id, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier)))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
 
@@ -156,7 +156,7 @@ namespace DaOAuth.WebServer.Controllers
                 {
                     access_token = GenerateToken(ACCESS_TOKEN_LIFETIME),
                     token_type = "bearer",
-                    expires_in = ACCESS_TOKEN_LIFETIME * 60,
+                    expires_in = ACCESS_TOKEN_LIFETIME * 60, // en secondes
                     refresh_token = refreshToken
                 });
             }

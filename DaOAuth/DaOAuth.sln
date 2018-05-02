@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Api", "DaOAuth.Api\DaOAuth.Api.csproj", "{3BCACAF9-9752-4369-BAD3-32A0202E9455}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Domain", "DaOauth.Domain\DaOAuth.Domain.csproj", "{CA67A048-968D-4107-A30C-44427910EA7F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Dal.EF", "DaOAuth.Dal.EF\DaOAuth.Dal.EF.csproj", "{753BA014-4E67-4643-8137-789D3E9313FA}"
@@ -35,10 +33,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3BCACAF9-9752-4369-BAD3-32A0202E9455}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3BCACAF9-9752-4369-BAD3-32A0202E9455}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3BCACAF9-9752-4369-BAD3-32A0202E9455}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3BCACAF9-9752-4369-BAD3-32A0202E9455}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CA67A048-968D-4107-A30C-44427910EA7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CA67A048-968D-4107-A30C-44427910EA7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA67A048-968D-4107-A30C-44427910EA7F}.Release|Any CPU.ActiveCfg = Release|Any CPU

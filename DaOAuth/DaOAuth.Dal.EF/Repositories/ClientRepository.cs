@@ -1,5 +1,6 @@
 ﻿using DaOAuth.Dal.Interface;
 using DaOAuth.Domain;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 
@@ -24,6 +25,12 @@ namespace DaOAuth.Dal.EF
         {
             ((DbContext)Context).Set<Client>().Attach(toUpdate);
             ((DbContext)Context).Entry(toUpdate).State = EntityState.Modified;
+        }
+
+        public IEnumerable<Client> GetAllByUserName(string userName)
+        {
+            return ((DaOAuthContext)Context).UsersClients.
+                Where(c => c.User.UserName.Equals(userName)).Select(c => c.Client);
         }
     }
 }

@@ -129,7 +129,6 @@ namespace DaOAuth.WebServer.Controllers
         public ActionResult Logout()
         {
             Request.GetOwinContext().Authentication.SignOut();
-
             return Redirect("/Home/Index");
         }
 

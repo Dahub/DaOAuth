@@ -18,13 +18,7 @@ namespace DaOAuth.Service
                     var user = userRepo.GetByUserName(userName);
                     if (user != null && this.AreEqualsSha1(password, user.Password))
                     {
-                        toReturn = new UserDto()
-                        {
-                            BirthDate = user.BirthDate,
-                            FullName = user.FullName,
-                            Id = user.Id,
-                            UserName = user.UserName
-                        };
+                        toReturn = user.ToDto();
                     }
                 }
             }
