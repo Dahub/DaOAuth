@@ -11,6 +11,7 @@ namespace DaOAuth.Domain
         public Client Client { get; set; }
         public DateTime CreationDate { get; set; }
         public int UserPublicId { get; set; }
+        public string RefreshToken { get; set; }
         public bool IsValid { get; set; }
     }
 }

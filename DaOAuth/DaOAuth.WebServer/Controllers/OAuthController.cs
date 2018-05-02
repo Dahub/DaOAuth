@@ -67,12 +67,14 @@ namespace DaOAuth.WebServer.Controllers
                 });
 
             // l'utilisateur a t'il authorisé le client ?
-            if (!cs.IsClientAuthorizeByUser(client_id, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier)))
+            string userName = ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!cs.IsClientAuthorizeByUser(client_id, userName))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
 
             // génération d'un code 
             string location = String.Empty;
-            var myCode = cs.GenerateAndAddCodeToClient(client_id);
+            var myCode = cs.GenerateAndAddCodeToClient(client_id, userName);
             location = String.Concat(redirect_uri, "?code=", myCode.CodeValue);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
@@ -149,8 +151,8 @@ namespace DaOAuth.WebServer.Controllers
                 }
 
                 string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME);
-
-                s.UpdateRefreshTokenForClient(refreshToken, model.client_id);
+                string userName = s.ExtractUserNameFromCode(model.code);
+                s.UpdateRefreshTokenForClient(refreshToken, model.client_id, userName);
 
                 return Json(new
                 {

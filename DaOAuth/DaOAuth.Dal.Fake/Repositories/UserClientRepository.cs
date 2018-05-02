@@ -32,5 +32,10 @@ namespace DaOAuth.Dal.Fake
         {
             
         }
+
+        public void Update(UserClient userClient)
+        {
+
+        }
     }
 }

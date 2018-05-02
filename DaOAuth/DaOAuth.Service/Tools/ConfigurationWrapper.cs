@@ -38,6 +38,14 @@ namespace DaOAuth.Service
             }
         }
 
+        public string PasswordForStringCypher
+        {
+            get
+            {
+                return ExtractStringParam("passwordForStringCypher");
+            }
+        }
+
         #region private
 
         private static string ExtractStringParam(string paramName)

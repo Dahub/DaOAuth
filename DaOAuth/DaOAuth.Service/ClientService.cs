@@ -8,6 +8,8 @@ namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
+        private const string CODE_PATTERN = "{0}#;#{1}#;#{2}";
+
         public IEnumerable<ClientDto> GetClientsByUserName(string userName)
         {
             IList<ClientDto> toReturn = new List<ClientDto>();
@@ -149,33 +151,6 @@ namespace DaOAuth.Service
             }
         }
 
-        public void RevokeClientForUser(string publicId, string userName)
-        {
-            try
-            {
-                using (var context = Factory.CreateContext(ConnexionString))
-                {
-                    var clientUserRepo = Factory.GetUserClientRepository(context);
-                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(publicId, userName);
-
-                    if (clientUser == null)
-                        throw new DaOauthServiceException("Impossible de révoquer, authorisation introuvable");
-
-                    clientUserRepo.Delete(clientUser);
-
-                    context.Commit();
-                }
-            }
-            catch (DaOauthServiceException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la révocation de l'authorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
-            }
-        }
-
         public bool AreClientCredentialsValid(string basicAuthCredentials)
         {
             bool toReturn = false;
@@ -260,18 +235,18 @@ namespace DaOAuth.Service
             }
         }
 
-        public void UpdateRefreshTokenForClient(string refreshToken, string clientPublicId)
+        public void UpdateRefreshTokenForClient(string refreshToken, string clientPublicId, string userName)
         {
             try
             {
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
-                    var clientRepo = Factory.GetClientRepository(context);
-                    var client = clientRepo.GetByPublicId(clientPublicId);
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+                    var client = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientPublicId, userName);
 
                     client.RefreshToken = refreshToken;
 
-                    clientRepo.Update(client);
+                    clientUserRepo.Update(client);
 
                     context.Commit();
                 }
@@ -330,7 +305,7 @@ namespace DaOAuth.Service
             return result;
         }
 
-        public Code GenerateAndAddCodeToClient(string clientPublicId)
+        public Code GenerateAndAddCodeToClient(string clientPublicId, string userName)
         {
             Code toReturn = null;
 
@@ -358,7 +333,9 @@ namespace DaOAuth.Service
                     toReturn = new Code()
                     {
                         ClientId = myClient.Id,
-                        CodeValue = RandomMaker.GenerateRandomString(24),
+                        CodeValue = StringCipher.Encrypt(
+                            String.Format(CODE_PATTERN, RandomMaker.GenerateRandomString(6), userName, RandomMaker.GenerateRandomString(6)),
+                            ConfigurationWrapper.Instance.PasswordForStringCypher),
                         IsValid = true,
                         ExpirationTimeStamp = new DateTimeOffset(DateTime.Now.AddMinutes(2)).ToUnixTimeSeconds()
                     };
@@ -374,6 +351,32 @@ namespace DaOAuth.Service
             catch (Exception ex)
             {
                 throw new DaOauthServiceException(String.Format("Erreur lors de la création d'un nouveau code pour le client {0}", clientPublicId), ex);
+            }
+
+            return toReturn;
+        }
+
+        public string ExtractUserNameFromCode(string code)
+        {
+            string toReturn = String.Empty;
+
+            try
+            {
+                var decrypted = StringCipher.Decrypt(code, ConfigurationWrapper.Instance.PasswordForStringCypher);
+
+                string[] infos = decrypted.Split("#;#".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                if (infos.Length != 3)
+                    throw new DaOauthServiceException("Format de code incorrect");
+
+                toReturn = infos[1];
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors du décryptage d'un code", ex);
             }
 
             return toReturn;

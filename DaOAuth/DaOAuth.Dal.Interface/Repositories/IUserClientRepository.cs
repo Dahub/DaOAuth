@@ -7,5 +7,6 @@ namespace DaOAuth.Dal.Interface
         UserClient GetUserClientByUserNameAndClientPublicId(string clientPublicId, string userName);
         void Add(UserClient userClient);
         void Delete(UserClient userClient);
+        void Update(UserClient userClient);
     }
 }

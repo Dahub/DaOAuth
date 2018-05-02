@@ -24,5 +24,11 @@ namespace DaOAuth.Dal.EF
             ((DbContext)Context).Set<UserClient>().Attach(userClient);
             ((DbContext)Context).Entry(userClient).State = EntityState.Deleted;
         }
+
+        public void Update(UserClient userClient)
+        {
+            ((DbContext)Context).Set<UserClient>().Attach(userClient);
+            ((DbContext)Context).Entry(userClient).State = EntityState.Modified;
+        }
     }
 }
