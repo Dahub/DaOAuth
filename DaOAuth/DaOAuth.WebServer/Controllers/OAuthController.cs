@@ -2,7 +2,10 @@
 using DaOAuth.Service;
 using DaOAuth.WebServer.Models;
 using Microsoft.AspNet.Identity;
+using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.OAuth;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Security.Claims;
 using System.Web.Mvc;
@@ -145,13 +148,13 @@ namespace DaOAuth.WebServer.Controllers
                     return GenerateErrorResponse("invalid_grant", "code incorrect");
                 }
 
-                string refreshToken = "plop refresh"; // GenerateToken(REFRESH_TOKEN_LIFETIME);
+                string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME);
 
                 s.UpdateRefreshTokenForClient(refreshToken, model.client_id);
 
                 return Json(new
                 {
-                    access_token = "plop access", // GenerateToken(ACCESS_TOKEN_LIFETIME),
+                    access_token = GenerateToken(ACCESS_TOKEN_LIFETIME),
                     token_type = "bearer",
                     expires_in = ACCESS_TOKEN_LIFETIME * 60,
                     refresh_token = refreshToken
@@ -162,6 +165,20 @@ namespace DaOAuth.WebServer.Controllers
                 Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 return Json(ex);
             }
+        }
+
+        private string GenerateToken(int minutesLifeTime)
+        {
+            ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>()
+            {
+                new Claim("Server","DaOAuth")
+            }, OAuthDefaults.AuthenticationType);
+
+            AuthenticationTicket ticket = new AuthenticationTicket(identity, new AuthenticationProperties());
+            var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
+            ticket.Properties.IssuedUtc = currentUtc;
+            ticket.Properties.ExpiresUtc = currentUtc.Add(TimeSpan.FromMinutes(minutesLifeTime));
+            return AuthConfig.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
         }
 
         private string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, string stateInfo)
