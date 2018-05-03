@@ -15,12 +15,12 @@ namespace DaOAuth.Service.Test
         [Fact]
         public void IsClientValidForAuthorizationCodeGrantTest()
         {
-            Assert.False(cs.IsClientValidForAuthorizationCodeGrant(String.Empty, "http://www.google.fr"));
-            Assert.False(cs.IsClientValidForAuthorizationCodeGrant("abc", "http://www.google.fr"));
-            Assert.False(cs.IsClientValidForAuthorizationCodeGrant("public", "http://www.google.fr"));
-            Assert.True(cs.IsClientValidForAuthorizationCodeGrant("id-valide", "http://www.google.fr"));
-            Assert.False(cs.IsClientValidForAuthorizationCodeGrant("id-valide", String.Empty));
-            Assert.False(cs.IsClientValidForAuthorizationCodeGrant("id-valide", "http://www.perdu.com"));
+            Assert.False(cs.IsClientValidForAuthorization(String.Empty, "http://www.google.fr"));
+            Assert.False(cs.IsClientValidForAuthorization("abc", "http://www.google.fr"));
+            Assert.False(cs.IsClientValidForAuthorization("public", "http://www.google.fr"));
+            Assert.True(cs.IsClientValidForAuthorization("id-valide", "http://www.google.fr"));
+            Assert.False(cs.IsClientValidForAuthorization("id-valide", String.Empty));
+            Assert.False(cs.IsClientValidForAuthorization("id-valide", "http://www.perdu.com"));
         }
 
         [Fact]

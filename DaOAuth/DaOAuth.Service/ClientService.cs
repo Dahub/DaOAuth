@@ -210,7 +210,7 @@ namespace DaOAuth.Service
             }
         }
 
-        public bool IsClientValidForAuthorizationCodeGrant(string clientPublicId, string requestRedirectUri)
+        public bool IsClientValidForAuthorization(string clientPublicId, string requestRedirectUri, string responseType)
         {
             try
             {
@@ -220,8 +220,19 @@ namespace DaOAuth.Service
                 if (String.IsNullOrEmpty(requestRedirectUri))
                     return false;
 
-                if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri, EClientType.CONFIDENTIAL))
-                    return false;
+                switch (responseType)
+                {
+                    case "code":
+                        if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri, EClientType.CONFIDENTIAL))
+                            return false;
+                        break;
+                    case "token":
+                        if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri, EClientType.PUBLIC))
+                            return false;
+                        break;
+                    default:
+                        throw new DaOauthServiceException(String.Format("response_type non pris en charge : {0}", responseType));
+                }
 
                 return true;
             }

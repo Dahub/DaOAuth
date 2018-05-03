@@ -33,20 +33,8 @@ namespace DaOAuth.WebServer.Controllers
             if (String.IsNullOrEmpty(response_type))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre response_type est requis", state));
 
-            if (response_type != "code")
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unsupported_response_type", "La valeur du paramètre response_type doit être code", state));
-
             if (String.IsNullOrEmpty(client_id))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre client_id est requis", state));
-
-            var cs = new ClientService()
-            {
-                ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
-                Factory = new EfRepositoriesFactory()
-            };
-
-            if (!cs.IsClientValidForAuthorizationCodeGrant(client_id, redirect_uri))
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
 
             // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
             if (!User.Identity.IsAuthenticated)
@@ -57,6 +45,15 @@ namespace DaOAuth.WebServer.Controllers
                     state = state,
                     redirect_uri = redirect_uri
                 });
+
+            var cs = new ClientService()
+            {
+                ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                Factory = new EfRepositoriesFactory()
+            };
+
+            if (!cs.IsClientValidForAuthorization(client_id, redirect_uri, response_type))
+                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
 
             // vérifier que l'utilisateur a bien connaissance du client, sinon, prompt d'autorisation
             if (!cs.HasUserAuthorizeOrDeniedClientAccess(client_id, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier)))
@@ -74,15 +71,16 @@ namespace DaOAuth.WebServer.Controllers
             if (!cs.IsClientAuthorizeByUser(client_id, userName))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
 
-            // génération d'un code 
-            string location = String.Empty;
-            var myCode = cs.GenerateAndAddCodeToClient(client_id, userName);
-            location = String.Concat(redirect_uri, "?code=", myCode.CodeValue);
-            if (!String.IsNullOrEmpty(state))
-                location = String.Concat(location, "&state=", state);
-
-            return Redirect(location);
-        }
+            switch (response_type)
+            {
+                case "code":                    
+                    return RedirectForResponseTypeCode(client_id, state, redirect_uri, cs, userName);
+                case "token": // implicit grant pour spa applications
+                    return RedirectForResponseTypeToken(client_id, state, redirect_uri, cs, userName);
+                default:
+                    return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unsupported_response_type", "La valeur du paramètre response_type doit être code", state));
+            }
+        }     
 
         [HttpPost]
         [Route("/token")]
@@ -146,6 +144,26 @@ namespace DaOAuth.WebServer.Controllers
                 username = userName,
                 exp = ticket.Properties.ExpiresUtc.Value.ToUnixTimeSeconds()
             });
+        }
+
+        private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, ClientService cs, string userName)
+        {
+            string location = String.Empty;
+            var myToken = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, clientId);
+            location = String.Concat(redirectUri, "?token=", myToken, "?token_type=bearer?expires_in", ACCESS_TOKEN_LIFETIME * 60);
+            if (!String.IsNullOrEmpty(state))
+                location = String.Concat(location, "&state=", state);
+            return Redirect(location);
+        }
+
+        private ActionResult RedirectForResponseTypeCode(string clientId, string state, string redirectUri, ClientService cs, string userName)
+        {
+            string location = String.Empty;
+            var myCode = cs.GenerateAndAddCodeToClient(clientId, userName);
+            location = String.Concat(redirectUri, "?code=", myCode.CodeValue);
+            if (!String.IsNullOrEmpty(state))
+                location = String.Concat(location, "&state=", state);
+            return Redirect(location);
         }
 
         private JsonResult GenerateTokenForRefreshToken(TokenModel model)
@@ -219,7 +237,7 @@ namespace DaOAuth.WebServer.Controllers
                 if (String.IsNullOrEmpty(model.client_id))
                     return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
 
-                if (!s.IsClientValidForAuthorizationCodeGrant(model.client_id, model.redirect_uri))
+                if (!s.IsClientValidForAuthorization(model.client_id, model.redirect_uri, "code"))
                     return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_client", "client non valide");
 
                 if (!s.IsCodeValidForAuthorizationCodeGrant(model.client_id, model.code))
