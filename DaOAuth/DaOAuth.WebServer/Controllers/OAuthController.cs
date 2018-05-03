@@ -17,6 +17,8 @@ namespace DaOAuth.WebServer.Controllers
     {
         private const int ACCESS_TOKEN_LIFETIME = 10; // temps en minutes
         private const int REFRESH_TOKEN_LIFETIME = 5256000; // 10 ans
+        private const string ACCESS_TOKEN_NAME = "access_token";
+        private const string REFRESH_TOKEN_NAME = "refresh_token";
 
         [AllowAnonymous]
         [Route("/authorize")]
@@ -88,7 +90,7 @@ namespace DaOAuth.WebServer.Controllers
         {
             if (String.IsNullOrEmpty(model.grant_type))
             {
-                return GenerateErrorResponse("invalid_request", "Le paramètre grant_type doit être présent une et une seule fois et avoir une valeur");
+                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre grant_type doit être présent une et une seule fois et avoir une valeur");
             }
 
             switch (model.grant_type)
@@ -96,8 +98,50 @@ namespace DaOAuth.WebServer.Controllers
                 case "authorization_code":
                     return GenerateTokenForAuthorizationCodeGrant(model);
                 default:
-                    return GenerateErrorResponse("unsupported_grant_type", "grant_type non pris en charge");
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "unsupported_grant_type", "grant_type non pris en charge");
             }
+        }
+
+        [HttpPost]
+        [Route("/introspect")]
+        public JsonResult Introspect(string token)
+        {
+            var s = new ClientService()
+            {
+                ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                Factory = new EfRepositoriesFactory()
+            };
+
+            JsonResult toReturnIfError;
+            if (!CheckAuthorizationHeader(out toReturnIfError, s))
+                return toReturnIfError;
+
+            if (String.IsNullOrEmpty(token))
+                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "le token est obligatoire");
+
+            // décryptage du token
+            var ticket = AuthConfig.OAuthBearerOptions.AccessTokenFormat.Unprotect(token);
+
+            var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
+            if (ticket.Properties.ExpiresUtc < currentUtc
+                || !ticket.Properties.Dictionary.ContainsKey("token_name")
+                || ticket.Properties.Dictionary["token_name"] != ACCESS_TOKEN_NAME)
+            {
+                return Json(new
+                {
+                    active = false
+                });
+            }
+
+            var clientId = ticket.Identity.FindFirstValue("ClientId");
+            var userName = ticket.Identity.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return Json(new
+            {
+                active = true,
+                client_id = clientId,
+                username = userName
+            });
         }
 
         private JsonResult GenerateTokenForAuthorizationCodeGrant(TokenModel model)
@@ -105,19 +149,13 @@ namespace DaOAuth.WebServer.Controllers
             try
             {
                 if (String.IsNullOrEmpty(model.code))
-                {
-                    return GenerateErrorResponse("invalid_request", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
-                }
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
 
                 if (String.IsNullOrEmpty(model.redirect_uri))
-                {
-                    return GenerateErrorResponse("invalid_request", "Le paramètre redirect_uri doit être présent une et une seule fois et avoir une valeur");
-                }
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre redirect_uri doit être présent une et une seule fois et avoir une valeur");
 
                 if (String.IsNullOrEmpty(model.client_id))
-                {
-                    return GenerateErrorResponse("invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
-                }
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
 
                 var s = new ClientService()
                 {
@@ -125,38 +163,24 @@ namespace DaOAuth.WebServer.Controllers
                     Factory = new EfRepositoriesFactory()
                 };
 
-                // vérification du paramètre d'authentification (basic)
-                if (Request.Headers["Authorization"] == null)
-                    return GenerateErrorResponse("unauthorized_client", "L'authentification du client a échoué");
-
-                string[] authsInfos = Request.Headers["Authorization"].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                
-                if(authsInfos.Length != 2)
-                    return GenerateErrorResponse("unauthorized_client", "L'authentification du client a échoué");
-
-                if(!authsInfos[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))
-                    return GenerateErrorResponse("unauthorized_client", "L'authentification du client a échoué");
-
-                if(!s.AreClientCredentialsValid(authsInfos[1]))
-                    return GenerateErrorResponse("unauthorized_client", "L'authentification du client a échoué");
+                JsonResult toReturnIfError;
+                if (!CheckAuthorizationHeader(out toReturnIfError, s))
+                    return toReturnIfError;
 
                 if (!s.IsClientValidForAuthorizationCodeGrant(model.client_id, model.redirect_uri))
-                {
-                    return GenerateErrorResponse("invalid_client", "client non valide");
-                }
+                    return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_client", "client non valide");                
 
                 if (!s.IsCodeValidForAuthorizationCodeGrant(model.client_id, model.code))
-                {
-                    return GenerateErrorResponse("invalid_grant", "code incorrect");
-                }
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "code incorrect");
 
-                string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME);
                 string userName = s.ExtractUserNameFromCode(model.code);
+
+                string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id);       
                 s.UpdateRefreshTokenForClient(refreshToken, model.client_id, userName);
 
                 return Json(new
                 {
-                    access_token = GenerateToken(ACCESS_TOKEN_LIFETIME),
+                    access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id),
                     token_type = "bearer",
                     expires_in = ACCESS_TOKEN_LIFETIME * 60, // en secondes
                     refresh_token = refreshToken
@@ -169,16 +193,52 @@ namespace DaOAuth.WebServer.Controllers
             }
         }
 
-        private string GenerateToken(int minutesLifeTime)
+        private bool CheckAuthorizationHeader(out JsonResult result, ClientService service)
+        {
+            result = null;
+
+            if (Request.Headers["Authorization"] == null)
+            {
+                result = GenerateErrorResponse(HttpStatusCode.Unauthorized, "unauthorized_client", "L'authentification du client a échoué");
+                return false;
+            }
+
+            string[] authsInfos = Request.Headers["Authorization"].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (authsInfos.Length != 2)
+            {
+                result = GenerateErrorResponse(HttpStatusCode.Unauthorized, "unauthorized_client", "L'authentification du client a échoué");
+                return false;
+            }
+
+            if (!authsInfos[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))
+            {
+                result = GenerateErrorResponse(HttpStatusCode.Unauthorized, "unauthorized_client", "L'authentification du client a échoué");
+                return false;
+            }
+
+            if (!service.AreClientCredentialsValid(authsInfos[1]))
+            {
+                result = GenerateErrorResponse(HttpStatusCode.Unauthorized, "unauthorized_client", "L'authentification du client a échoué");
+                return false;
+            }            
+
+            return true;
+        }
+
+        private string GenerateToken(int minutesLifeTime, string tokenName, string userName, string clientId)
         {
             ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>()
             {
-                new Claim("Server","DaOAuth")
+                new Claim("Server","DaOAuth"),
+                new Claim(ClaimTypes.NameIdentifier, userName),
+                new Claim("ClientId" , clientId)
             }, OAuthDefaults.AuthenticationType);
 
             AuthenticationTicket ticket = new AuthenticationTicket(identity, new AuthenticationProperties());
             var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
             ticket.Properties.IssuedUtc = currentUtc;
+            ticket.Properties.Dictionary.Add("token_name", tokenName);
             ticket.Properties.ExpiresUtc = currentUtc.Add(TimeSpan.FromMinutes(minutesLifeTime));
             return AuthConfig.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
         }
@@ -196,32 +256,34 @@ namespace DaOAuth.WebServer.Controllers
             return String.Format("{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription);
         }
 
-        private JsonResult GenerateErrorResponse(string errorName, string errorDescription, string stateInfo)
+        private JsonResult GenerateErrorResponse(HttpStatusCode statusCode, string errorName, string errorDescription, string stateInfo)
         {
+            Response.StatusCode = (int)statusCode;          
+
             if (String.IsNullOrEmpty(stateInfo))
-                return GenerateErrorResponse(errorName, errorDescription);
-
-            var myError = new
             {
-                error = errorName,
-                error_description = errorDescription,
-                state = stateInfo
-            };
-
-            Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return Json(myError);
+                var myError = new
+                {
+                    error = errorName,
+                    error_description = errorDescription
+                };
+                return Json(myError);
+            }
+            else
+            {
+                var myError = new
+                {
+                    error = errorName,
+                    error_description = errorDescription,
+                    state = stateInfo
+                };
+                return Json(myError);
+            }
         }
 
-        private JsonResult GenerateErrorResponse(string errorName, string errorDescription)
+        private JsonResult GenerateErrorResponse(HttpStatusCode statusCode, string errorName, string errorDescription)
         {
-            var myError = new
-            {
-                error = errorName,
-                error_description = errorDescription
-            };
-
-            Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return Json(myError);
+            return GenerateErrorResponse(statusCode, errorName, errorDescription, String.Empty);
         }
 
         private bool IsUriCorrect(string uri)

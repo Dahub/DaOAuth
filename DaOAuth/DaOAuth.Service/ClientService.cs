@@ -169,7 +169,7 @@ namespace DaOAuth.Service
                         var clientRepo = Factory.GetClientRepository(context);
                         var client = clientRepo.GetByPublicId(clientPublicId);
 
-                        return AreEqualsSha1(clientSecret, client.ClientSecret);
+                        return AreEqualsSha1(clientSecret, client.ClientSecret) && client.IsValid;
                     }
                 }
             }

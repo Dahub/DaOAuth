@@ -43,7 +43,6 @@ namespace DaOAuth.Dal.EF
             modelBuilder.Entity<Client>().Property(p => p.PublicId).HasColumnName("PublicId").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.ClientSecret).HasColumnName("ClientSecret").HasColumnType("varbinary").HasMaxLength(50);
            
-
             modelBuilder.Entity<Client>().HasMany<Code>(c => c.Codes).WithRequired(c => c.Client).WillCascadeOnDelete();
             modelBuilder.Entity<Client>().Property(p => p.ClientTypeId).HasColumnName("FK_ClientType").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Client>().HasRequired<ClientType>(c => c.ClientType).WithMany(ct => ct.Clients).HasForeignKey<int>(ct => ct.ClientTypeId);
