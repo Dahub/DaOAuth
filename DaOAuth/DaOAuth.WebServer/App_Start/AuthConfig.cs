@@ -21,7 +21,7 @@ namespace DaOAuth.WebServer
                 {
                     OnApplyRedirect = ctx =>
                     {
-                        if (!IsAjaxRequest(ctx.Request) && !IsJsonRequest(ctx.Request))
+                        if (!IsAjaxRequest(ctx.Request) && !IsJsonRequest(ctx.Request)) // on ajoute la vérif json en + de celle ajax
                         {
                             ctx.Response.Redirect(ctx.RedirectUri);
                         }

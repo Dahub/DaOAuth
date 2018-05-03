@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security.Claims;
+using System.Threading;
 using System.Web.Mvc;
 
 namespace DaOAuth.WebServer.Controllers
@@ -73,14 +74,14 @@ namespace DaOAuth.WebServer.Controllers
 
             switch (response_type)
             {
-                case "code":                    
+                case "code":
                     return RedirectForResponseTypeCode(client_id, state, redirect_uri, cs, userName);
                 case "token": // implicit grant pour spa applications
                     return RedirectForResponseTypeToken(client_id, state, redirect_uri, cs, userName);
                 default:
                     return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unsupported_response_type", "La valeur du paramètre response_type doit être code", state));
             }
-        }     
+        }
 
         [HttpPost]
         [Route("/token")]
@@ -97,6 +98,8 @@ namespace DaOAuth.WebServer.Controllers
                     return GenerateTokenForAuthorizationCodeGrant(model);
                 case "refresh_token":
                     return GenerateTokenForRefreshToken(model);
+                case "password":
+                    return GenerateTokenFromPasswordGrant(model);
                 default:
                     return GenerateErrorResponse(HttpStatusCode.BadRequest, "unsupported_grant_type", "grant_type non pris en charge");
             }
@@ -187,19 +190,19 @@ namespace DaOAuth.WebServer.Controllers
                 var ticket = AuthConfig.OAuthBearerOptions.AccessTokenFormat.Unprotect(model.refresh_token);
 
                 var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
-                if (ticket == null 
+                if (ticket == null
                     || ticket.Properties.ExpiresUtc < currentUtc
                     || !ticket.Properties.Dictionary.ContainsKey("token_name")
                     || ticket.Properties.Dictionary["token_name"] != REFRESH_TOKEN_NAME)
                 {
-                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");                    
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
                 }
-                
+
                 var userName = ticket.Identity.FindFirstValue(ClaimTypes.NameIdentifier);
                 var clientId = ticket.Identity.FindFirstValue("ClientId");
 
                 // vérifier que le token n'ai pas été révoqué
-                if(!s.IsRefreshTokenValid(userName, clientId, model.refresh_token))
+                if (!s.IsRefreshTokenValid(userName, clientId, model.refresh_token))
                     return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
 
                 // générer un nouveau token (et refresh token à mettre à jour)
@@ -254,6 +257,53 @@ namespace DaOAuth.WebServer.Controllers
             }
         }
 
+        private JsonResult GenerateTokenFromPasswordGrant(TokenModel model)
+        {
+            try
+            {
+                /* RFC6749 4.3.2 : Since this access token request utilizes the resource owner's
+                password, the authorization server MUST protect the endpoint against
+                brute force attacks(e.g., using rate - limitation or generating
+                alerts). */
+                Thread.Sleep(50);
+
+                var s = new ClientService()
+                {
+                    ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                    Factory = new EfRepositoriesFactory()
+                };
+
+                JsonResult toReturnIfError;
+                if (!CheckAuthorizationHeader(out toReturnIfError, s))
+                    return toReturnIfError;
+
+                if (String.IsNullOrEmpty(model.username))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre username doit être présent une et une seule fois et avoir une valeur");
+
+                if (String.IsNullOrEmpty(model.password))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre password doit être présent une et une seule fois et avoir une valeur");
+
+                // vérification de la validé des identifiants
+                var u = new UserService()
+                {
+                    ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                    Factory = new EfRepositoriesFactory()
+                };
+
+                if (u.Find(model.username, model.password) == null)
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "username ou password incorrect");
+
+                model.client_id = s.GetClientIdFromAuthorizationHeaderValue(Request.Headers["Authorization"]);
+
+                return GenerateAccesTokenAndUpdateRefreshToken(model, s, model.username);
+            }
+            catch (Exception ex)
+            {
+                Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                return Json(ex);
+            }
+        }
+
         private JsonResult GenerateAccesTokenAndUpdateRefreshToken(TokenModel model, ClientService s, string userName)
         {
             string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id);
@@ -296,7 +346,7 @@ namespace DaOAuth.WebServer.Controllers
             {
                 result = GenerateErrorResponse(HttpStatusCode.Unauthorized, "unauthorized_client", "L'authentification du client a échoué");
                 return false;
-            }            
+            }
 
             return true;
         }
@@ -333,7 +383,7 @@ namespace DaOAuth.WebServer.Controllers
 
         private JsonResult GenerateErrorResponse(HttpStatusCode statusCode, string errorName, string errorDescription, string stateInfo)
         {
-            Response.StatusCode = (int)statusCode;          
+            Response.StatusCode = (int)statusCode;
 
             if (String.IsNullOrEmpty(stateInfo))
             {

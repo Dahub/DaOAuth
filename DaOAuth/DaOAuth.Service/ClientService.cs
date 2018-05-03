@@ -151,6 +151,42 @@ namespace DaOAuth.Service
             }
         }
 
+        public string GetClientIdFromAuthorizationHeaderValue(string headerValue)
+        {
+            string toReturn = String.Empty;
+
+            try
+            {
+                string[] authsInfos = headerValue.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (authsInfos.Length != 2)
+                    throw new DaOauthServiceException("Extraction d'id du client : valeur de header incorrecte");
+
+                if (!authsInfos[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))
+                    throw new DaOauthServiceException("Extraction d'id du client : le header d'authentification doit être de type Basic");
+
+                string credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authsInfos[1]));
+                int separatorIndex = credentials.IndexOf(':');
+                if (separatorIndex >= 0)
+                {
+                    toReturn = credentials.Substring(0, separatorIndex);
+                }
+
+                if (String.IsNullOrEmpty(toReturn))
+                    throw new DaOauthServiceException("Extraction d'id du client : impossible de trouver l'id");
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors de l'extraction du client_id à partir de la valeur du header d'authorization", ex);
+            }
+
+            return toReturn;
+        }
+
         public bool AreClientCredentialsValid(string basicAuthCredentials)
         {
             bool toReturn = false;
