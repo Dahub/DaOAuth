@@ -235,6 +235,28 @@ namespace DaOAuth.Service
             }
         }
 
+        public bool IsRefreshTokenValid(string userName, string clientPublicId, string refresh_token)
+        {
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+                    var client = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientPublicId, userName);
+
+                    return client.RefreshToken.Equals(refresh_token);
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors de la vérification de la validité du refresh token", ex);
+            }
+        }
+
         public void UpdateRefreshTokenForClient(string refreshToken, string clientPublicId, string userName)
         {
             try

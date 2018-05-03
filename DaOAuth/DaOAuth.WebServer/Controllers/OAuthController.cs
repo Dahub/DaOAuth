@@ -97,6 +97,8 @@ namespace DaOAuth.WebServer.Controllers
             {
                 case "authorization_code":
                     return GenerateTokenForAuthorizationCodeGrant(model);
+                case "refresh_token":
+                    return GenerateTokenForRefreshToken(model);
                 default:
                     return GenerateErrorResponse(HttpStatusCode.BadRequest, "unsupported_grant_type", "grant_type non pris en charge");
             }
@@ -123,7 +125,8 @@ namespace DaOAuth.WebServer.Controllers
             var ticket = AuthConfig.OAuthBearerOptions.AccessTokenFormat.Unprotect(token);
 
             var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
-            if (ticket.Properties.ExpiresUtc < currentUtc
+            if (ticket == null
+                || ticket.Properties.ExpiresUtc < currentUtc
                 || !ticket.Properties.Dictionary.ContainsKey("token_name")
                 || ticket.Properties.Dictionary["token_name"] != ACCESS_TOKEN_NAME)
             {
@@ -140,23 +143,15 @@ namespace DaOAuth.WebServer.Controllers
             {
                 active = true,
                 client_id = clientId,
-                username = userName
+                username = userName,
+                exp = ticket.Properties.ExpiresUtc.Value.ToUnixTimeSeconds()
             });
         }
 
-        private JsonResult GenerateTokenForAuthorizationCodeGrant(TokenModel model)
+        private JsonResult GenerateTokenForRefreshToken(TokenModel model)
         {
             try
             {
-                if (String.IsNullOrEmpty(model.code))
-                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
-
-                if (String.IsNullOrEmpty(model.redirect_uri))
-                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre redirect_uri doit être présent une et une seule fois et avoir une valeur");
-
-                if (String.IsNullOrEmpty(model.client_id))
-                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
-
                 var s = new ClientService()
                 {
                     ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
@@ -167,30 +162,92 @@ namespace DaOAuth.WebServer.Controllers
                 if (!CheckAuthorizationHeader(out toReturnIfError, s))
                     return toReturnIfError;
 
-                if (!s.IsClientValidForAuthorizationCodeGrant(model.client_id, model.redirect_uri))
-                    return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_client", "client non valide");                
+                if (String.IsNullOrEmpty(model.refresh_token))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "refresh_token", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
 
-                if (!s.IsCodeValidForAuthorizationCodeGrant(model.client_id, model.code))
-                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "code incorrect");
+                // analyse du refresh token
+                var ticket = AuthConfig.OAuthBearerOptions.AccessTokenFormat.Unprotect(model.refresh_token);
 
-                string userName = s.ExtractUserNameFromCode(model.code);
-
-                string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id);       
-                s.UpdateRefreshTokenForClient(refreshToken, model.client_id, userName);
-
-                return Json(new
+                var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
+                if (ticket == null 
+                    || ticket.Properties.ExpiresUtc < currentUtc
+                    || !ticket.Properties.Dictionary.ContainsKey("token_name")
+                    || ticket.Properties.Dictionary["token_name"] != REFRESH_TOKEN_NAME)
                 {
-                    access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id),
-                    token_type = "bearer",
-                    expires_in = ACCESS_TOKEN_LIFETIME * 60, // en secondes
-                    refresh_token = refreshToken
-                });
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");                    
+                }
+                
+                var userName = ticket.Identity.FindFirstValue(ClaimTypes.NameIdentifier);
+                var clientId = ticket.Identity.FindFirstValue("ClientId");
+
+                // vérifier que le token n'ai pas été révoqué
+                if(!s.IsRefreshTokenValid(userName, clientId, model.refresh_token))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
+
+                // générer un nouveau token (et refresh token à mettre à jour)
+                model.client_id = clientId;
+
+                return GenerateAccesTokenAndUpdateRefreshToken(model, s, userName);
             }
             catch (Exception ex)
             {
                 Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 return Json(ex);
             }
+        }
+
+        private JsonResult GenerateTokenForAuthorizationCodeGrant(TokenModel model)
+        {
+            try
+            {
+                var s = new ClientService()
+                {
+                    ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
+                    Factory = new EfRepositoriesFactory()
+                };
+
+                JsonResult toReturnIfError;
+                if (!CheckAuthorizationHeader(out toReturnIfError, s))
+                    return toReturnIfError;
+
+                if (String.IsNullOrEmpty(model.code))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
+
+                if (String.IsNullOrEmpty(model.redirect_uri))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre redirect_uri doit être présent une et une seule fois et avoir une valeur");
+
+                if (String.IsNullOrEmpty(model.client_id))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
+
+                if (!s.IsClientValidForAuthorizationCodeGrant(model.client_id, model.redirect_uri))
+                    return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_client", "client non valide");
+
+                if (!s.IsCodeValidForAuthorizationCodeGrant(model.client_id, model.code))
+                    return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "code incorrect");
+
+                string userName = s.ExtractUserNameFromCode(model.code);
+
+                return GenerateAccesTokenAndUpdateRefreshToken(model, s, userName);
+            }
+            catch (Exception ex)
+            {
+                Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                return Json(ex);
+            }
+        }
+
+        private JsonResult GenerateAccesTokenAndUpdateRefreshToken(TokenModel model, ClientService s, string userName)
+        {
+            string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id);
+            s.UpdateRefreshTokenForClient(refreshToken, model.client_id, userName);
+
+            return Json(new
+            {
+                access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id),
+                token_type = "bearer",
+                expires_in = ACCESS_TOKEN_LIFETIME * 60, // en secondes
+                refresh_token = refreshToken
+            });
         }
 
         private bool CheckAuthorizationHeader(out JsonResult result, ClientService service)
