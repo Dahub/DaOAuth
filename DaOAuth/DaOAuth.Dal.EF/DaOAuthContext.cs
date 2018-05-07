@@ -16,6 +16,7 @@ namespace DaOAuth.Dal.EF
         public DbSet<ClientType> ClientsTypes { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserClient> UsersClients { get; set; }
+        public DbSet<Scope> Scopes { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -41,11 +42,17 @@ namespace DaOAuth.Dal.EF
             modelBuilder.Entity<Client>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.Name).HasColumnName("Name").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.PublicId).HasColumnName("PublicId").HasColumnType("nvarchar").HasMaxLength(256).IsRequired();
-            modelBuilder.Entity<Client>().Property(p => p.ClientSecret).HasColumnName("ClientSecret").HasColumnType("varbinary").HasMaxLength(50);
-           
+            modelBuilder.Entity<Client>().Property(p => p.ClientSecret).HasColumnName("ClientSecret").HasColumnType("varbinary").HasMaxLength(50);           
             modelBuilder.Entity<Client>().HasMany<Code>(c => c.Codes).WithRequired(c => c.Client).WillCascadeOnDelete();
+            modelBuilder.Entity<Client>().HasMany<Scope>(c => c.Scopes).WithRequired(c => c.Client).WillCascadeOnDelete();
             modelBuilder.Entity<Client>().Property(p => p.ClientTypeId).HasColumnName("FK_ClientType").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Client>().HasRequired<ClientType>(c => c.ClientType).WithMany(ct => ct.Clients).HasForeignKey<int>(ct => ct.ClientTypeId);
+
+            modelBuilder.Entity<Scope>().ToTable("Scopes");
+            modelBuilder.Entity<Scope>().HasKey<int>(s => s.Id);
+            modelBuilder.Entity<Scope>().Property(p => p.Wording).HasColumnName("Wording").HasColumnType("nvarchar");
+            modelBuilder.Entity<Scope>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<Scope>().HasRequired<Client>(s => s.Client).WithMany(c=> c.Scopes).HasForeignKey<int>(c => c.ClientId);
 
             modelBuilder.Entity<Code>().ToTable("Codes");
             modelBuilder.Entity<Code>().HasKey<int>(c => c.Id);

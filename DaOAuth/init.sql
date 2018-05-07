@@ -70,6 +70,14 @@ create table auth.UsersClients
 )
 go
 
+create table auth.Scopes
+(
+	Id integer not null primary key identity(1,1),
+	FK_Client integer not null foreign key references auth.Clients(Id),
+	Wording nvarchar(max) not null
+)
+go
+
 /* données d'initialisation */
 insert into auth.ClientsTypes(wording) values ('public')
 insert into auth.ClientsTypes(wording) values ('confidential')
@@ -83,10 +91,16 @@ insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, Creat
 values ('5EDsd2EU642NVq7D', HASHBYTES('SHA1', 'def123456789'), 'test spa', 'http://perdu.com', getdate(), 1, 1)
 go
 
+
+insert into auth.Scopes(FK_Client, wording) values (1, 'plop')
+insert into auth.Scopes(FK_Client, wording) values (1, 'plip')
+go
+
 select * from auth.Clients
 select * from auth.Codes
 select * from auth.Users
 select * from auth.UsersClients
+
 
 --delete from auth.UsersClients
 

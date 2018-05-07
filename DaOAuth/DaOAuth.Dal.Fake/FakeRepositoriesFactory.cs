@@ -40,5 +40,13 @@ namespace DaOAuth.Dal.Fake
                 Context = context
             };
         }
+
+        public IScopeRepository GetScopeRepository(IContext context)
+        {
+            return new ScopeRepository()
+            {
+                Context = context
+            };
+        }
     }
 }

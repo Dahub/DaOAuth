@@ -111,6 +111,72 @@ namespace DaOAuth.Service
             return toReturn;
         }
 
+        public bool AreScopesAuthorizedForClient(string client_id, string[] scopes)
+        {
+            try
+            {               
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var scopeRepo = Factory.GetScopeRepository(context);
+                    
+                    IEnumerable<string> clientScopes = scopeRepo.GetByClientPublicId(client_id).Select(s => s.Wording.ToUpper());
+
+                    if ((scopes == null || scopes.Length == 0) && clientScopes.Count() == 0) // client sans scope défini
+                        return true;
+
+                    if ((scopes == null || scopes.Length == 0) && clientScopes.Count() > 0) // client avec scopes définis
+                        return false;
+
+                    foreach(var s in scopes)
+                    {
+                        if (!clientScopes.Contains<string>(s.ToUpper()))
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation des scopes du client {0}", client_id), ex);
+            }
+        }
+
+        public IEnumerable<string> CheckScopesForClient(string client_id, string[] scopes)
+        {
+            IEnumerable<string> chekedScopes = new List<string>();
+           
+            try
+            {
+                if (scopes == null || scopes.Length == 0)
+                    return chekedScopes;
+
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var scopeRepo = Factory.GetScopeRepository(context);
+
+                    IEnumerable<string> l1 = scopes.ToList();
+                    IEnumerable<string> l2 = scopeRepo.GetByClientPublicId(client_id).Select(s => s.Wording);
+
+                    chekedScopes = l1.Intersect(l2, StringComparer.OrdinalIgnoreCase);
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException(String.Format("Erreur lors de la liste des scopes du client {0}", client_id), ex);
+            }
+
+            return chekedScopes;
+        }
+
         public void AuthorizeOrDeniedClientForUser(string publicId, string userName, bool authorize)
         {
             try
