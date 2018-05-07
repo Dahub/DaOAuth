@@ -8,5 +8,6 @@
         public string RedirectUrl { get; set; }
         public string ClientName { get; set; }
         public bool IsValid { get; set; }
+        public string Scope { get; set; }
     }
 }

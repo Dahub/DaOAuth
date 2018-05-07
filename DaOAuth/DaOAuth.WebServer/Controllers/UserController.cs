@@ -14,7 +14,7 @@ namespace DaOAuth.WebServer.Controllers
     {
         [Authorize]
         [HttpGet]
-        public ActionResult AuthorizeClient(string response_type, string client_id, string state, string redirect_uri)
+        public ActionResult AuthorizeClient(string response_type, string client_id, string state, string redirect_uri, string scope)
         {
             var cs = new ClientService()
             {
@@ -29,7 +29,8 @@ namespace DaOAuth.WebServer.Controllers
                 ResponseType = response_type,
                 State = state,
                 ClientName = cs.GetClientByPublicId(client_id).Name,
-                IsValid = true
+                IsValid = true,
+                Scope = scope
             });
         }
 
@@ -50,7 +51,8 @@ namespace DaOAuth.WebServer.Controllers
                 response_type = model.ResponseType,
                 client_id = model.ClientId,
                 state = model.State,
-                redirect_uri = model.RedirectUrl
+                redirect_uri = model.RedirectUrl,
+                scope = model.Scope
             });
         }
 

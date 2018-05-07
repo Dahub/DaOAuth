@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="ClientService.cs" />
     <Compile Include="Dto\ClientDto.cs" />
+    <Compile Include="Dto\CodeDto.cs" />
     <Compile Include="Dto\UserDto.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceBase.cs" />

@@ -45,11 +45,7 @@ namespace DaOAuth.WebServer.Controllers
                     client_id = client_id,
                     state = state,
                     redirect_uri = redirect_uri
-                });
-
-            string[] scopes = null;
-            if (!String.IsNullOrEmpty(scope))
-                scopes = scope.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                });          
 
             var cs = new ClientService()
             {
@@ -67,7 +63,8 @@ namespace DaOAuth.WebServer.Controllers
                     response_type = response_type,
                     client_id = client_id,
                     state = state,
-                    redirect_uri = redirect_uri
+                    redirect_uri = redirect_uri,
+                    scope = scope
                 });
 
             // l'utilisateur a t'il authorisé le client ?
@@ -77,15 +74,15 @@ namespace DaOAuth.WebServer.Controllers
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
 
             // vérification des scopes proposés
-            if (!cs.AreScopesAuthorizedForClient(client_id, scopes))
+            if (!cs.AreScopesAuthorizedForClient(client_id, scope))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_scope", "Scopes demandés invalides"));
 
             switch (response_type)
             {
                 case "code":
-                    return RedirectForResponseTypeCode(client_id, state, redirect_uri, cs, userName);
+                    return RedirectForResponseTypeCode(client_id, state, redirect_uri, cs, userName, scope);
                 case "token": // implicit grant pour spa applications
-                    return RedirectForResponseTypeToken(client_id, state, redirect_uri, cs, userName);
+                    return RedirectForResponseTypeToken(client_id, state, redirect_uri, cs, userName, scope);
                 default:
                     return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unsupported_response_type", "La valeur du paramètre response_type doit être code", state));
             }
@@ -155,6 +152,11 @@ namespace DaOAuth.WebServer.Controllers
                 });
             }
 
+            // on récupère les scopes
+            string scope = String.Empty;
+            if (ticket.Properties.Dictionary.ContainsKey("scope"))
+                scope = ticket.Properties.Dictionary["scope"];
+
             var clientId = ticket.Identity.FindFirstValue("ClientId");
             var userName = ticket.Identity.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -163,24 +165,25 @@ namespace DaOAuth.WebServer.Controllers
                 active = true,
                 client_id = clientId,
                 username = userName,
+                scope = scope,
                 exp = ticket.Properties.ExpiresUtc.Value.ToUnixTimeSeconds()
             });
         }
 
-        private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, ClientService cs, string userName)
+        private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, ClientService cs, string userName, string scope)
         {
             string location = String.Empty;
-            var myToken = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, clientId);
+            var myToken = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, clientId, scope);
             location = String.Concat(redirectUri, "?token=", myToken, "?token_type=bearer?expires_in", ACCESS_TOKEN_LIFETIME * 60);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
             return Redirect(location);
         }
 
-        private ActionResult RedirectForResponseTypeCode(string clientId, string state, string redirectUri, ClientService cs, string userName)
+        private ActionResult RedirectForResponseTypeCode(string clientId, string state, string redirectUri, ClientService cs, string userName, string scope)
         {
             string location = String.Empty;
-            var myCode = cs.GenerateAndAddCodeToClient(clientId, userName);
+            var myCode = cs.GenerateAndAddCodeToClient(clientId, userName, scope);
             location = String.Concat(redirectUri, "?code=", myCode.CodeValue);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
@@ -201,9 +204,12 @@ namespace DaOAuth.WebServer.Controllers
 
             var clientId = s.GetClientIdFromAuthorizationHeaderValue(Request.Headers["Authorization"]);
 
+            if (!s.AreScopesAuthorizedForClient(model.client_id, model.scope))
+                return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_scope", "Scopes demandés invalides");
+
             return Json(new
             {
-                access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, clientId),
+                access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, clientId, model.scope),
                 token_type = "bearer",
                 expires_in = ACCESS_TOKEN_LIFETIME * 60
             });
@@ -236,6 +242,10 @@ namespace DaOAuth.WebServer.Controllers
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
             }
 
+            string scope = String.Empty;
+            if (ticket.Properties.Dictionary.ContainsKey("scope"))
+                scope = ticket.Properties.Dictionary["scope"];
+
             var userName = ticket.Identity.FindFirstValue(ClaimTypes.NameIdentifier);
             var clientId = ticket.Identity.FindFirstValue("ClientId");
 
@@ -246,7 +256,10 @@ namespace DaOAuth.WebServer.Controllers
             // générer un nouveau token (et refresh token à mettre à jour)
             model.client_id = clientId;
 
-            return GenerateAccesTokenAndUpdateRefreshToken(model, s, userName);
+            if (!s.AreScopesAuthorizedForClient(model.client_id, scope))
+                return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_scope", "Scopes demandés invalides");
+
+            return GenerateAccesTokenAndUpdateRefreshToken(model, s, userName, scope);
         }
 
         private JsonResult GenerateTokenForAuthorizationCodeGrant(TokenModel model)
@@ -273,12 +286,12 @@ namespace DaOAuth.WebServer.Controllers
             if (!s.IsClientValidForAuthorization(model.client_id, model.redirect_uri, "code"))
                 return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_client", "client non valide");
 
-            if (!s.IsCodeValidForAuthorizationCodeGrant(model.client_id, model.code))
-                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "code incorrect");
+            CodeDto codeInfos = s.GetCodeInfos(model.client_id, model.code);
 
-            string userName = s.ExtractUserNameFromCode(model.code);
+            if (!codeInfos.IsValid)
+                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "code incorrect");            
 
-            return GenerateAccesTokenAndUpdateRefreshToken(model, s, userName);
+            return GenerateAccesTokenAndUpdateRefreshToken(model, s, codeInfos.UserName, codeInfos.Scope);
         }
 
         private JsonResult GenerateTokenFromPasswordGrant(TokenModel model)
@@ -317,20 +330,24 @@ namespace DaOAuth.WebServer.Controllers
 
             model.client_id = s.GetClientIdFromAuthorizationHeaderValue(Request.Headers["Authorization"]);
 
-            return GenerateAccesTokenAndUpdateRefreshToken(model, s, model.username);
+            if(!s.AreScopesAuthorizedForClient(model.client_id, model.scope))
+                return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_scope", "Scopes demandés invalides");
+
+            return GenerateAccesTokenAndUpdateRefreshToken(model, s, model.username, model.scope);
         }
 
-        private JsonResult GenerateAccesTokenAndUpdateRefreshToken(TokenModel model, ClientService s, string userName)
+        private JsonResult GenerateAccesTokenAndUpdateRefreshToken(TokenModel model, ClientService s, string userName, string scope)
         {
-            string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id);
+            string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id, scope);
             s.UpdateRefreshTokenForClient(refreshToken, model.client_id, userName);
 
             return Json(new
             {
-                access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id),
+                access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id, scope),
                 token_type = "bearer",
                 expires_in = ACCESS_TOKEN_LIFETIME * 60, // en secondes
-                refresh_token = refreshToken
+                refresh_token = refreshToken,
+                scope = String.IsNullOrEmpty(scope)?String.Empty:scope
             });
         }
 
@@ -367,12 +384,12 @@ namespace DaOAuth.WebServer.Controllers
             return true;
         }
 
-        private string GenerateToken(int minutesLifeTime, string tokenName, string clientId)
+        private string GenerateToken(int minutesLifeTime, string tokenName, string clientId, string scope)
         {
-            return GenerateToken(minutesLifeTime, tokenName, String.Empty, clientId);
+            return GenerateToken(minutesLifeTime, tokenName, String.Empty, clientId, scope);
         }
 
-        private string GenerateToken(int minutesLifeTime, string tokenName, string userName, string clientId)
+        private string GenerateToken(int minutesLifeTime, string tokenName, string userName, string clientId, string scope)
         {
             ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>()
             {
@@ -387,7 +404,10 @@ namespace DaOAuth.WebServer.Controllers
             var currentUtc = new Microsoft.Owin.Infrastructure.SystemClock().UtcNow;
             ticket.Properties.IssuedUtc = currentUtc;
             ticket.Properties.Dictionary.Add("token_name", tokenName);
+            if(!String.IsNullOrEmpty(scope))
+                ticket.Properties.Dictionary.Add("scope", scope);
             ticket.Properties.ExpiresUtc = currentUtc.Add(TimeSpan.FromMinutes(minutesLifeTime));
+            
             return AuthConfig.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
         }
 

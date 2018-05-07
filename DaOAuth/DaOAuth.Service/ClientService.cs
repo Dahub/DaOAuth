@@ -8,8 +8,6 @@ namespace DaOAuth.Service
 {
     public class ClientService : ServiceBase
     {
-        private const string CODE_PATTERN = "{0}#;#{1}#;#{2}";
-
         public IEnumerable<ClientDto> GetClientsByUserName(string userName)
         {
             IList<ClientDto> toReturn = new List<ClientDto>();
@@ -111,10 +109,14 @@ namespace DaOAuth.Service
             return toReturn;
         }
 
-        public bool AreScopesAuthorizedForClient(string client_id, string[] scopes)
+        public bool AreScopesAuthorizedForClient(string client_id, string scope)
         {
             try
-            {               
+            {
+                string[] scopes = null;
+                if (!String.IsNullOrEmpty(scope))
+                    scopes = scope.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var scopeRepo = Factory.GetScopeRepository(context);
@@ -145,38 +147,7 @@ namespace DaOAuth.Service
                 throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation des scopes du client {0}", client_id), ex);
             }
         }
-
-        public IEnumerable<string> CheckScopesForClient(string client_id, string[] scopes)
-        {
-            IEnumerable<string> chekedScopes = new List<string>();
-           
-            try
-            {
-                if (scopes == null || scopes.Length == 0)
-                    return chekedScopes;
-
-                using (var context = Factory.CreateContext(ConnexionString))
-                {
-                    var scopeRepo = Factory.GetScopeRepository(context);
-
-                    IEnumerable<string> l1 = scopes.ToList();
-                    IEnumerable<string> l2 = scopeRepo.GetByClientPublicId(client_id).Select(s => s.Wording);
-
-                    chekedScopes = l1.Intersect(l2, StringComparer.OrdinalIgnoreCase);
-                }
-            }
-            catch (DaOauthServiceException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la liste des scopes du client {0}", client_id), ex);
-            }
-
-            return chekedScopes;
-        }
-
+       
         public void AuthorizeOrDeniedClientForUser(string publicId, string userName, bool authorize)
         {
             try
@@ -287,20 +258,31 @@ namespace DaOAuth.Service
             return toReturn;
         }
 
-        public bool IsCodeValidForAuthorizationCodeGrant(string clientPublicId, string code)
+        public CodeDto GetCodeInfos(string clientPublicId, string code)
         {
+            CodeDto toReturn = new CodeDto()
+            {
+                IsValid = false
+            };
+
             try
             {
                 if (String.IsNullOrEmpty(clientPublicId))
-                    return false;
+                    return toReturn;
 
                 if (String.IsNullOrEmpty(code))
-                    return false;
+                    return toReturn;
 
-                if (!CheckIfCodeIsValid(clientPublicId, code))
-                    return false;
+                Code myCode;
 
-                return true;
+                if (!CheckIfCodeIsValid(clientPublicId, code, out myCode))
+                    return toReturn;
+
+                toReturn.IsValid = true;
+                toReturn.Scope = myCode.Scope;
+                toReturn.UserName = myCode.UserName;
+
+                return toReturn;
             }
             catch (DaOauthServiceException)
             {
@@ -440,7 +422,7 @@ namespace DaOAuth.Service
             return result;
         }
 
-        public Code GenerateAndAddCodeToClient(string clientPublicId, string userName)
+        public Code GenerateAndAddCodeToClient(string clientPublicId, string userName, string scope)
         {
             Code toReturn = null;
 
@@ -468,10 +450,10 @@ namespace DaOAuth.Service
                     toReturn = new Code()
                     {
                         ClientId = myClient.Id,
-                        CodeValue = StringCipher.Encrypt(
-                            String.Format(CODE_PATTERN, RandomMaker.GenerateRandomString(6), userName, RandomMaker.GenerateRandomString(6)),
-                            ConfigurationWrapper.Instance.PasswordForStringCypher),
+                        CodeValue = RandomMaker.GenerateRandomString(24), // StringCipher.Encrypt(String.Format(CODE_PATTERN, RandomMaker.GenerateRandomString(6), userName, RandomMaker.GenerateRandomString(6)), ConfigurationWrapper.Instance.PasswordForStringCypher),
                         IsValid = true,
+                        Scope = scope,
+                        UserName = userName,
                         ExpirationTimeStamp = new DateTimeOffset(DateTime.Now.AddMinutes(2)).ToUnixTimeSeconds()
                     };
                     codeRepo.Add(toReturn);
@@ -490,44 +472,20 @@ namespace DaOAuth.Service
 
             return toReturn;
         }
-
-        public string ExtractUserNameFromCode(string code)
-        {
-            string toReturn = String.Empty;
-
-            try
-            {
-                var decrypted = StringCipher.Decrypt(code, ConfigurationWrapper.Instance.PasswordForStringCypher);
-
-                string[] infos = decrypted.Split("#;#".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                if (infos.Length != 3)
-                    throw new DaOauthServiceException("Format de code incorrect");
-
-                toReturn = infos[1];
-            }
-            catch (DaOauthServiceException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new DaOauthServiceException("Erreur lors du décryptage d'un code", ex);
-            }
-
-            return toReturn;
-        }
-
-        private bool CheckIfCodeIsValid(string clientPublicId, string code)
+ 
+        private bool CheckIfCodeIsValid(string clientPublicId, string code, out Code myCode)
         {
             using (var context = Factory.CreateContext(ConnexionString))
             {
                 var codeRepo = Factory.GetCodeRepository(context);
                 var codes = codeRepo.GetAllByClientId(clientPublicId);
 
+                myCode = null;
+
                 if (codes == null || codes.Count() == 0)
                     return false;
 
-                Code myCode = codes.Where(c => c.CodeValue.Equals(code)).FirstOrDefault();
+                myCode = codes.Where(c => c.CodeValue.Equals(code)).FirstOrDefault();
                 if (myCode == null)
                     return false;
 
