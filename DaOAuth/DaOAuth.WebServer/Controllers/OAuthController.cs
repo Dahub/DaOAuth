@@ -17,7 +17,7 @@ namespace DaOAuth.WebServer.Controllers
     public class OAuthController : Controller
     {
         private const int ACCESS_TOKEN_LIFETIME = 10; // temps en minutes
-        private const int REFRESH_TOKEN_LIFETIME = 5256000; // 10 ans
+        private const int REFRESH_TOKEN_LIFETIME = 10 * 365 * 24 * 60; // 5256000 => 10 ans exprimés en minutes
         private const string ACCESS_TOKEN_NAME = "access_token";
         private const string REFRESH_TOKEN_NAME = "refresh_token";
 
@@ -170,6 +170,8 @@ namespace DaOAuth.WebServer.Controllers
             });
         }
 
+        #region private
+
         private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, ClientService cs, string userName, string scope)
         {
             string location = String.Empty;
@@ -184,7 +186,7 @@ namespace DaOAuth.WebServer.Controllers
         {
             string location = String.Empty;
             var myCode = cs.GenerateAndAddCodeToClient(clientId, userName, scope);
-            location = String.Concat(redirectUri, "?code=", myCode.CodeValue);
+            location = String.Concat(redirectUri, "?code=", myCode);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
             return Redirect(location);
@@ -459,5 +461,7 @@ namespace DaOAuth.WebServer.Controllers
             Uri u = null;
             return Uri.TryCreate(uri, UriKind.Absolute, out u);
         }
+
+        #endregion
     }
 }

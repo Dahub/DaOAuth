@@ -34,7 +34,8 @@ namespace DaOAuth.Service
             return new ClientDto()
             {
                 IsValid = value.IsValid,
-                Name = value.Name
+                Name = value.Name,
+                PublicId = value.PublicId
             };
         }
 

@@ -378,7 +378,7 @@ namespace DaOAuth.Service
             }
         }
 
-        public Client CreateNewClient(string name, string defaulRedirectUrl)
+        public ClientDto CreateNewClient(string name, string defaulRedirectUrl)
         {
             Client result = null;
 
@@ -419,12 +419,12 @@ namespace DaOAuth.Service
                 throw new DaOauthServiceException("Erreur lors de la création du client", ex);
             }
 
-            return result;
+            return result.ToDto();
         }
 
-        public Code GenerateAndAddCodeToClient(string clientPublicId, string userName, string scope)
+        public string GenerateAndAddCodeToClient(string clientPublicId, string userName, string scope)
         {
-            Code toReturn = null;
+            string toReturn = null;
 
             try
             {
@@ -447,7 +447,7 @@ namespace DaOAuth.Service
                     }
 
                     // création d'un nouveau code
-                    toReturn = new Code()
+                    Code myCode = new Code()
                     {
                         ClientId = myClient.Id,
                         CodeValue = RandomMaker.GenerateRandomString(24), // StringCipher.Encrypt(String.Format(CODE_PATTERN, RandomMaker.GenerateRandomString(6), userName, RandomMaker.GenerateRandomString(6)), ConfigurationWrapper.Instance.PasswordForStringCypher),
@@ -456,9 +456,11 @@ namespace DaOAuth.Service
                         UserName = userName,
                         ExpirationTimeStamp = new DateTimeOffset(DateTime.Now.AddMinutes(2)).ToUnixTimeSeconds()
                     };
-                    codeRepo.Add(toReturn);
+                    codeRepo.Add(myCode);
 
                     context.Commit();
+
+                    toReturn = myCode.CodeValue;
                 }
             }
             catch (DaOauthServiceException)
