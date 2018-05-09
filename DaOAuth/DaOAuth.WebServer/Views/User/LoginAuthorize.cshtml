@@ -60,7 +60,7 @@
                 if (data.logged == 'false')
                     bootbox.alert('login ou mot de passe incorrect');
                 if (data.logged == 'true')
-                    window.location.replace('/OAuth/authorize?response_type=@Model.ResponseType&client_id=@Model.ClientId&state=@Model.State&redirect_uri=@Model.RedirectUrl');
+                    window.location.replace('/OAuth/authorize?response_type=@Model.ResponseType&client_id=@Model.ClientId&state=@Model.State&redirect_uri=@Model.RedirectUrl&scope=@Model.Scope');
             })
         });
     </script>

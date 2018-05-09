@@ -36,17 +36,7 @@ namespace DaOAuth.WebServer.Controllers
 
             if (String.IsNullOrEmpty(client_id))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre client_id est requis", state));
-
-            // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
-            if (!User.Identity.IsAuthenticated)
-                return RedirectToAction("LoginAuthorize", "User", new
-                {
-                    response_type = response_type,
-                    client_id = client_id,
-                    state = state,
-                    redirect_uri = redirect_uri
-                });          
-
+          
             var cs = new ClientService()
             {
                 ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
@@ -55,6 +45,21 @@ namespace DaOAuth.WebServer.Controllers
 
             if (!cs.IsClientValidForAuthorization(client_id, redirect_uri, response_type))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
+
+            // vérification des scopes proposés
+            if (!cs.AreScopesAuthorizedForClient(client_id, scope))
+                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_scope", "Scopes demandés invalides"));
+
+            // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToAction("LoginAuthorize", "User", new
+                {
+                    response_type = response_type,
+                    client_id = client_id,
+                    state = state,
+                    redirect_uri = redirect_uri,
+                    scope = scope
+                });
 
             // vérifier que l'utilisateur a bien connaissance du client, sinon, prompt d'autorisation
             if (!cs.HasUserAuthorizeOrDeniedClientAccess(client_id, ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier)))
@@ -66,17 +71,13 @@ namespace DaOAuth.WebServer.Controllers
                     redirect_uri = redirect_uri,
                     scope = scope
                 });
-
+            
             // l'utilisateur a t'il authorisé le client ?
             string userName = ((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (!cs.IsClientAuthorizeByUser(client_id, userName))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
-
-            // vérification des scopes proposés
-            if (!cs.AreScopesAuthorizedForClient(client_id, scope))
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_scope", "Scopes demandés invalides"));
-
+            
             switch (response_type)
             {
                 case "code":

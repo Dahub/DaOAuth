@@ -3,5 +3,62 @@
     ViewBag.Title = "Index";
 }
 
-<h2>Index</h2>
+@if (User.Identity.IsAuthenticated)
+{
+    <h2>@String.Format("Bienvenue {0}", User.Identity.Name)</h2>
+    <h3>Liste des clients authorisés</h3>
+    <div id="clientsDiv">
+       <div class="client_div">
+           <h3>un titre</h3>
+           <p>un texte</p>
+           <ul>
+               <li>un scope</li>
+               <li>un autre scope</li>
+           </ul>
+           
+       </div>
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            reloadClients();
+        });
+    </script>
+}
+else
+{
+    <h2>Bienvenue</h2>
+    <p>Veuillez vous authentifier ou créer un compte</p>
+}
+
+<script type="text/javascript">
+    var tt;
+    function reloadClients() {
+        $.ajax({
+            type: 'GET',
+            url: '/Home/GetClients',
+            error: function (jqXHR, exception) {
+                bootbox.alert(exception);
+            }
+        }).done(function (data) {
+            tt = data;
+            console.log(data);
+            $('#clientsDiv').html('');
+            $.each(data, function (i, item) {
+                var html = '<div class="client_div">';
+                html += '<h3>';
+                html += item.Name;
+                html += '</h3>';
+                html += '<p>';
+                html += item.Description;
+                html += '</p>';
+                html += '</div></br />';
+                console.log(html);
+                $('#clientsDiv').append(html);
+            });
+           
+            
+        });
+    }
+</script>
 

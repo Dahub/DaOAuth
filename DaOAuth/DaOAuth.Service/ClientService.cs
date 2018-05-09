@@ -158,6 +158,10 @@ namespace DaOAuth.Service
                     var userRepo = Factory.GetUserRepository(context);
                     var clientUserRepo = Factory.GetUserClientRepository(context);
 
+                    // on vérifie que le client n'existe pas déjà
+                    if (clientUserRepo.GetUserClientByUserNameAndClientPublicId(publicId, userName) != null)
+                        return;
+
                     var client = clientRepo.GetByPublicId(publicId);
                     if (client == null || !client.IsValid)
                         throw new DaOauthServiceException(String.Format("Client {0} introuvable ou invalide", publicId));

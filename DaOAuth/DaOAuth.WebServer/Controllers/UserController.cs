@@ -58,14 +58,15 @@ namespace DaOAuth.WebServer.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public ActionResult LoginAuthorize(string response_type, string client_id, string state, string redirect_uri)
+        public ActionResult LoginAuthorize(string response_type, string client_id, string state, string redirect_uri, string scope)
         {
             return View(new LoginAuthorizeViewModel()
             {
                 ClientId = client_id,
                 RedirectUrl = redirect_uri,
                 ResponseType = response_type,
-                State = state
+                State = state,
+                Scope = scope
             });
         }
 

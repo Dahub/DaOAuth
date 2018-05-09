@@ -30,7 +30,7 @@ namespace DaOAuth.Dal.EF
         public IEnumerable<Client> GetAllByUserName(string userName)
         {
             return ((DaOAuthContext)Context).UsersClients.
-                Where(c => c.User.UserName.Equals(userName)).Select(c => c.Client);
+                Where(c => c.User.UserName.Equals(userName)).Select(c => c.Client).Include("Scopes");
         }
     }
 }

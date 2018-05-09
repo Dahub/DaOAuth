@@ -1,5 +1,6 @@
 ﻿using DaOAuth.Domain;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace DaOAuth.Service
@@ -35,7 +36,9 @@ namespace DaOAuth.Service
             {
                 IsValid = value.IsValid,
                 Name = value.Name,
-                PublicId = value.PublicId
+                PublicId = value.PublicId,
+                Description = value.Description,
+                Scopes = value.Scopes != null?value.Scopes.Select(s => s.Wording).ToArray():new string[] {}
             };
         }
 
