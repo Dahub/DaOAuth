@@ -9,5 +9,6 @@
         public string ClientName { get; set; }
         public bool IsValid { get; set; }
         public string Scope { get; set; }
+        public string NiceScope { get; set; }
     }
 }

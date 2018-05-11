@@ -17,13 +17,13 @@ namespace DaOAuth.WebServer.Controllers
         [HttpGet]
         public JsonResult GetClients()
         {
-            var cs = new ClientService()
+            var cs = new UserClientService()
             {
                 ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
                 Factory = new EfRepositoriesFactory()
             };
 
-            return Json(cs.GetClientsByUserName(((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier)), JsonRequestBehavior.AllowGet);
+            return Json(cs.GetUserClientsByUserName(((ClaimsIdentity)User.Identity).FindFirstValue(ClaimTypes.NameIdentifier)), JsonRequestBehavior.AllowGet);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace DaOAuth.WebServer.Controllers
                 ConnexionString = ConfigurationWrapper.Instance.ConnexionString,
                 Factory = new EfRepositoriesFactory()
             };
-
+            
             return View(new AuthorizeClientViewModel()
             {
                 ClientId = client_id,

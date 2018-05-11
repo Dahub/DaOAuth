@@ -37,5 +37,10 @@ namespace DaOAuth.Dal.Fake
         {
 
         }
+
+        public IEnumerable<UserClient> GetAllByUserName(string userName)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -46,6 +46,7 @@
     <Compile Include="ClientService.cs" />
     <Compile Include="Dto\ClientDto.cs" />
     <Compile Include="Dto\CodeDto.cs" />
+    <Compile Include="Dto\UserClientDto.cs" />
     <Compile Include="Dto\UserDto.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceBase.cs" />
@@ -55,6 +56,7 @@
     <Compile Include="Tools\ExtensionMethods.cs" />
     <Compile Include="Tools\RandomMaker.cs" />
     <Compile Include="Tools\StringCipher.cs" />
+    <Compile Include="UserClientService.cs" />
     <Compile Include="UserService.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -53,6 +53,7 @@ namespace DaOAuth.Dal.EF
             modelBuilder.Entity<Scope>().ToTable("Scopes");
             modelBuilder.Entity<Scope>().HasKey<int>(s => s.Id);
             modelBuilder.Entity<Scope>().Property(p => p.Wording).HasColumnName("Wording").HasColumnType("nvarchar");
+            modelBuilder.Entity<Scope>().Property(p => p.NiceWording).HasColumnName("NiceWording").HasColumnType("nvarchar").HasMaxLength(512);
             modelBuilder.Entity<Scope>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Scope>().HasRequired<Client>(s => s.Client).WithMany(c=> c.Scopes).HasForeignKey<int>(c => c.ClientId);
 

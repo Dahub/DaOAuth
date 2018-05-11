@@ -77,7 +77,8 @@ create table auth.Scopes
 (
 	Id integer not null primary key identity(1,1),
 	FK_Client integer not null foreign key references auth.Clients(Id),
-	Wording nvarchar(max) not null
+	Wording nvarchar(max) not null,
+	NiceWording nvarchar(512) not null
 )
 go
 
@@ -94,11 +95,11 @@ insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, Creat
 values ('5EDsd2EU642NVq7D', HASHBYTES('SHA1', 'def123456789'), 'test spa', 'http://perdu.com', getdate(), 1, 1, 'un autre client pour tester, mais de type publique')
 go
 
-insert into auth.Scopes(FK_Client, wording) values (1, 'plop')
-insert into auth.Scopes(FK_Client, wording) values (1, 'plip')
+insert into auth.Scopes(FK_Client, wording, NiceWording) values (1, 'account:read:write', 'plop')
+insert into auth.Scopes(FK_Client, wording, NiceWording) values (1, 'operation:read:write', 'plip')
 go
 
-insert into auth.Scopes(FK_Client, wording) values (2, 'plap')
+insert into auth.Scopes(FK_Client, wording, NiceWording) values (2, 'account:read', 'plap')
 go
 
 select * from auth.Scopes

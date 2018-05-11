@@ -34,6 +34,16 @@
             <div class="row">
                 <div class="col-6 offset-2">
                     <h2>L'application @Model.ClientName demande l'accès à vos données</h2>
+                    @if(Model.Scope != null && Model.Scope.Count() > 0)
+                    {
+                        <h5>Les authorisations suivantes sont requises :</h5>
+                        <ul>
+                            @foreach(var s in Model.Scope.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <li>@s</li>
+                            }
+                        </ul>
+                    }
                 </div>
 
                 <div class="col-6 offset-2">

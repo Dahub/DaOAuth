@@ -6,7 +6,7 @@
 @if (User.Identity.IsAuthenticated)
 {
     <h2>@String.Format("Bienvenue {0}", User.Identity.Name)</h2>
-    <h3>Liste des clients authorisés</h3>
+    <h3>Liste des clients</h3>
     <div id="clientsDiv">
        <div class="client_div">
            <h3>un titre</h3>
@@ -45,15 +45,30 @@ else
             console.log(data);
             $('#clientsDiv').html('');
             $.each(data, function (i, item) {
-                var html = '<div class="client_div">';
+                var html = '';
+                if (item.IsAuthorize === true) {
+                    html += '<div class="client_div client_div_valid">';
+                }
+                else {
+                    html += '<div class="client_div client_div_invalid">';
+                }
                 html += '<h3>';
-                html += item.Name;
+                html += item.ClientName;
                 html += '</h3>';
                 html += '<p>';
-                html += item.Description;
+                html += item.ClientDescription;
                 html += '</p>';
+                if (item.ScopesNiceWordings.length > 0) {
+                    html += '<h4>Authorisations</h4>';
+                    html += '<ul>';
+                    $.each(item.ScopesNiceWordings, function (j, scope) {
+                        html += '<li>';
+                        html += scope;
+                        html += '</li>';
+                    });
+                }
+                html += '</ul>';
                 html += '</div></br />';
-                console.log(html);
                 $('#clientsDiv').append(html);
             });
            

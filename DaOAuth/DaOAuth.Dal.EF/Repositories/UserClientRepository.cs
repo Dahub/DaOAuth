@@ -2,6 +2,7 @@
 using DaOAuth.Domain;
 using System.Linq;
 using System.Data.Entity;
+using System.Collections.Generic;
 
 namespace DaOAuth.Dal.EF
 {
@@ -29,6 +30,14 @@ namespace DaOAuth.Dal.EF
         {
             ((DbContext)Context).Set<UserClient>().Attach(userClient);
             ((DbContext)Context).Entry(userClient).State = EntityState.Modified;
+        }
+
+        public IEnumerable<UserClient> GetAllByUserName(string userName)
+        {
+            return ((DaOAuthContext)Context).UsersClients.
+                Include("Client").
+                Include("Client.Scopes").
+                Where(uc => uc.User.UserName.Equals(userName, System.StringComparison.OrdinalIgnoreCase));
         }
     }
 }
