@@ -175,7 +175,6 @@ namespace DaOAuth.Service
                         ClientId = client.Id,
                         CreationDate = DateTime.Now,
                         UserId = user.Id,
-                        UserPublicId = Guid.NewGuid(),
                         IsValid = authorize
                     });
 

@@ -67,7 +67,6 @@ create table auth.UsersClients
 	FK_User integer not null foreign key references auth.Users(Id),
 	FK_Client integer not null foreign key references auth.Clients(Id),
 	CreationDate datetime not null,
-	UserPublicId uniqueidentifier not null unique,
 	RefreshToken nvarchar(512) null,
 	IsValid bit not null
 )
