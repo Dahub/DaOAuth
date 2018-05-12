@@ -87,6 +87,8 @@ insert into auth.ClientsTypes(wording) values ('public')
 insert into auth.ClientsTypes(wording) values ('confidential')
 go
 
+
+
 /* données de test */
 insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, CreationDate, IsValid, FK_ClientType, Description) 
 values ('G7H8q4yBhpinNo6H', HASHBYTES('SHA1', 'abc123456789'), 'test', 'http://perdu.com', getdate(), 1, 2, 'un client de type confidential pour tester')
@@ -94,12 +96,20 @@ go
 insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, CreationDate, IsValid, FK_ClientType, Description) 
 values ('5EDsd2EU642NVq7D', HASHBYTES('SHA1', 'def123456789'), 'test spa', 'http://perdu.com', getdate(), 1, 1, 'un autre client pour tester, mais de type publique')
 go
+/* client daget */
+insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, CreationDate, IsValid, FK_ClientType, Description) 
+values ('dEx5f12sPLEN5S09', HASHBYTES('SHA1', 'p-#d556cmzZSEDgvg'), 'DaGet Client', 'http://localhost:1234', getdate(), 1, 1, 'Client permettant d''utiliser l''API DaGet')
+go
 
 insert into auth.Scopes(FK_Client, wording, NiceWording) values (1, 'account:read:write', 'plop')
 insert into auth.Scopes(FK_Client, wording, NiceWording) values (1, 'operation:read:write', 'plip')
 go
 
 insert into auth.Scopes(FK_Client, wording, NiceWording) values (2, 'account:read', 'plap')
+go
+
+insert into auth.Scopes(FK_Client, wording, NiceWording) values (3, 'daget:account:rw', 'Gestion des comptes (Lecture et écriture)')
+insert into auth.Scopes(FK_Client, wording, NiceWording) values (3, 'daget:operation:rw', 'Saisir des opérations (Lecture et écriture)')
 go
 
 select * from auth.Scopes

@@ -38,11 +38,11 @@ namespace DaOAuth.Service
             }
         }
 
-        public string PasswordForStringCypher
+        public string PasswordSalt
         {
             get
             {
-                return ExtractStringParam("passwordForStringCypher");
+                return ExtractStringParam("passwordSalt");
             }
         }
 
