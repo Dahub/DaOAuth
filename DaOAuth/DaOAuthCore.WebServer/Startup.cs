@@ -62,7 +62,7 @@ namespace DaOAuthCore.WebServer
             }
             else
             {
-                app.UseExceptionHandler("/Shared/Error");
+                app.UseExceptionHandler("/Home/Error");
             }
 
             app.UseAuthentication();

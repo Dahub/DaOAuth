@@ -1,3 +1,11 @@
-﻿@{
+﻿@model DaOAuthCore.WebServer.Models.ErrorViewModel
+
+@{
     ViewBag.Title = "Erreur";
 }
+
+<h2>Oups, l'application a rencontré une erreur :-(</h2>
+<p>
+    <strong>Request ID:</strong> <code>@Model.RequestId</code>
+</p>
+<p><a href="/Home/Index">Retour à l'accueil</a></p>
