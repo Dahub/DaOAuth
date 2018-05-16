@@ -1,0 +1,153 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="wwwroot\fonts\fontawesome-webfont.eot" />
+    <None Remove="wwwroot\fonts\fontawesome-webfont.svg" />
+    <None Remove="wwwroot\fonts\fontawesome-webfont.ttf" />
+    <None Remove="wwwroot\fonts\fontawesome-webfont.woff" />
+    <None Remove="wwwroot\fonts\fontawesome-webfont.woff2" />
+    <None Remove="wwwroot\fonts\FontAwesome.otf" />
+    <None Remove="wwwroot\fonts\glyphicons-halflings-regular.eot" />
+    <None Remove="wwwroot\fonts\glyphicons-halflings-regular.svg" />
+    <None Remove="wwwroot\fonts\glyphicons-halflings-regular.ttf" />
+    <None Remove="wwwroot\fonts\glyphicons-halflings-regular.woff" />
+    <None Remove="wwwroot\js\esm\popper-utils.js" />
+    <None Remove="wwwroot\js\esm\popper-utils.js.map" />
+    <None Remove="wwwroot\js\esm\popper-utils.min.js" />
+    <None Remove="wwwroot\js\esm\popper-utils.min.js.map" />
+    <None Remove="wwwroot\js\esm\popper.js" />
+    <None Remove="wwwroot\js\esm\popper.js.map" />
+    <None Remove="wwwroot\js\esm\popper.min.js" />
+    <None Remove="wwwroot\js\esm\popper.min.js.map" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker-en-CA.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ar-tn.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ar.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.az.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.bg.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.bn.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.br.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.bs.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ca.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.cs.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.cy.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.da.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.de.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.el.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.en-AU.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.en-GB.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.en-IE.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.en-NZ.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.en-ZA.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.eo.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.es.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.et.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.eu.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.fa.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.fi.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.fo.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.fr-CH.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.fr.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.gl.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.he.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.hi.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.hr.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.hu.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.hy.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.id.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.is.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.it-CH.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.it.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ja.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ka.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.kh.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.kk.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.km.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ko.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.kr.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.lt.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.lv.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.me.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.mk.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.mn.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ms.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.nb.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.nl-BE.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.nl.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.no.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.oc.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.pl.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.pt-BR.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.pt.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ro.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.rs-latin.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.rs.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ru.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.si.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.sk.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.sl.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.sq.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.sr-latin.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.sr.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.sv.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.sw.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.ta.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.tg.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.th.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.tr.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.uk.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.uz-cyrl.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.uz-latn.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.vi.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.zh-CN.min.js" />
+    <None Remove="wwwroot\js\locales\bootstrap-datepicker.zh-TW.min.js" />
+    <None Remove="wwwroot\js\umd\popper-utils.js" />
+    <None Remove="wwwroot\js\umd\popper-utils.js.map" />
+    <None Remove="wwwroot\js\umd\popper-utils.min.js" />
+    <None Remove="wwwroot\js\umd\popper-utils.min.js.map" />
+    <None Remove="wwwroot\js\umd\popper.js" />
+    <None Remove="wwwroot\js\umd\popper.js.map" />
+    <None Remove="wwwroot\js\umd\popper.min.js" />
+    <None Remove="wwwroot\js\umd\popper.min.js.map" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="2.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\jquery-3.0.0-vsdoc.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DaOAuthCore.Dal.EF\DaOAuthCore.Dal.EF.csproj" />
+    <ProjectReference Include="..\DaOAuthCore.Dal.Interface\DaOAuthCore.Dal.Interface.csproj" />
+    <ProjectReference Include="..\DaOAuthCore.Service\DaOAuthCore.Service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\js\index.d.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\css\Site.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

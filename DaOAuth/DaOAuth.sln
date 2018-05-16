@@ -3,29 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Domain", "DaOauth.Domain\DaOAuth.Domain.csproj", "{CA67A048-968D-4107-A30C-44427910EA7F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Dal.EF", "DaOAuth.Dal.EF\DaOAuth.Dal.EF.csproj", "{753BA014-4E67-4643-8137-789D3E9313FA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Dal.Interface", "DaOAuth.Dal.Interface\DaOAuth.Dal.Interface.csproj", "{EE36DFDF-1D93-4AEB-A1D8-FA78BC347D69}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Service", "DaOAuth.Service\DaOAuth.Service.csproj", "{CD0BCBF7-C858-49D8-ADB9-4418F8EC1B84}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL", "SQL", "{830D0F39-CDA6-49FC-AD43-51532626B420}"
 	ProjectSection(SolutionItems) = preProject
 		init.sql = init.sql
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Service.Test", "DaOAauth.Service.Test\DaOAuth.Service.Test.csproj", "{01AF618E-9159-48A4-9936-0CA16D706A55}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.Dal.Fake", "DaOAuth.Dal.Fake\DaOAuth.Dal.Fake.csproj", "{58178293-09FF-47D3-917E-BF021F870A02}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaOAuth.WebServer", "DaOAuth.WebServer\DaOAuth.WebServer.csproj", "{6FE77DE7-16D3-46B3-8FFE-7425A1F24A6F}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infos", "Infos", "{69CA66E8-812B-47EA-9928-8DBFB1EA321C}"
 	ProjectSection(SolutionItems) = preProject
 		Todo.txt = Todo.txt
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaOAuthCore.Dal.Interface", "DaOAuthCore.Dal.Interface\DaOAuthCore.Dal.Interface.csproj", "{BB592E65-E2EA-4DA5-A7DE-144F1B008A50}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaOAuthCore.Domain", "DaOAuthCore.Domain\DaOAuthCore.Domain.csproj", "{1CAFED1F-6BE2-4BC2-BC4D-9918DF2D8FB6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaOAuthCore.Dal.EF", "DaOAuthCore.Dal.EF\DaOAuthCore.Dal.EF.csproj", "{FEAB86E6-FB24-418B-A608-4CFC21CD7747}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaOAuthCore.Service", "DaOAuthCore.Service\DaOAuthCore.Service.csproj", "{03CC71FB-71C0-45AB-B1F1-CB1CF665F3EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaOAuthCore.WebServer", "DaOAuthCore.WebServer\DaOAuthCore.WebServer.csproj", "{D4026B57-A5C8-441F-97F0-EA8A3C061285}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,34 +29,26 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CA67A048-968D-4107-A30C-44427910EA7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CA67A048-968D-4107-A30C-44427910EA7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CA67A048-968D-4107-A30C-44427910EA7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CA67A048-968D-4107-A30C-44427910EA7F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{753BA014-4E67-4643-8137-789D3E9313FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{753BA014-4E67-4643-8137-789D3E9313FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{753BA014-4E67-4643-8137-789D3E9313FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{753BA014-4E67-4643-8137-789D3E9313FA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EE36DFDF-1D93-4AEB-A1D8-FA78BC347D69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE36DFDF-1D93-4AEB-A1D8-FA78BC347D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE36DFDF-1D93-4AEB-A1D8-FA78BC347D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE36DFDF-1D93-4AEB-A1D8-FA78BC347D69}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CD0BCBF7-C858-49D8-ADB9-4418F8EC1B84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD0BCBF7-C858-49D8-ADB9-4418F8EC1B84}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CD0BCBF7-C858-49D8-ADB9-4418F8EC1B84}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CD0BCBF7-C858-49D8-ADB9-4418F8EC1B84}.Release|Any CPU.Build.0 = Release|Any CPU
-		{01AF618E-9159-48A4-9936-0CA16D706A55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{01AF618E-9159-48A4-9936-0CA16D706A55}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{01AF618E-9159-48A4-9936-0CA16D706A55}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{01AF618E-9159-48A4-9936-0CA16D706A55}.Release|Any CPU.Build.0 = Release|Any CPU
-		{58178293-09FF-47D3-917E-BF021F870A02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58178293-09FF-47D3-917E-BF021F870A02}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58178293-09FF-47D3-917E-BF021F870A02}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{58178293-09FF-47D3-917E-BF021F870A02}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6FE77DE7-16D3-46B3-8FFE-7425A1F24A6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FE77DE7-16D3-46B3-8FFE-7425A1F24A6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FE77DE7-16D3-46B3-8FFE-7425A1F24A6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FE77DE7-16D3-46B3-8FFE-7425A1F24A6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB592E65-E2EA-4DA5-A7DE-144F1B008A50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB592E65-E2EA-4DA5-A7DE-144F1B008A50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB592E65-E2EA-4DA5-A7DE-144F1B008A50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB592E65-E2EA-4DA5-A7DE-144F1B008A50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CAFED1F-6BE2-4BC2-BC4D-9918DF2D8FB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CAFED1F-6BE2-4BC2-BC4D-9918DF2D8FB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CAFED1F-6BE2-4BC2-BC4D-9918DF2D8FB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CAFED1F-6BE2-4BC2-BC4D-9918DF2D8FB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FEAB86E6-FB24-418B-A608-4CFC21CD7747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEAB86E6-FB24-418B-A608-4CFC21CD7747}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEAB86E6-FB24-418B-A608-4CFC21CD7747}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEAB86E6-FB24-418B-A608-4CFC21CD7747}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03CC71FB-71C0-45AB-B1F1-CB1CF665F3EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03CC71FB-71C0-45AB-B1F1-CB1CF665F3EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03CC71FB-71C0-45AB-B1F1-CB1CF665F3EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03CC71FB-71C0-45AB-B1F1-CB1CF665F3EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4026B57-A5C8-441F-97F0-EA8A3C061285}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4026B57-A5C8-441F-97F0-EA8A3C061285}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4026B57-A5C8-441F-97F0-EA8A3C061285}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4026B57-A5C8-441F-97F0-EA8A3C061285}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

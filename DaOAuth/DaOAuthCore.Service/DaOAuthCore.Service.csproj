@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DaOAuthCore.Dal.EF\DaOAuthCore.Dal.EF.csproj" />
+    <ProjectReference Include="..\DaOAuthCore.Dal.Interface\DaOAuthCore.Dal.Interface.csproj" />
+    <ProjectReference Include="..\DaOAuthCore.Domain\DaOAuthCore.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

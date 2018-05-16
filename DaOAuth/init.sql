@@ -1,14 +1,14 @@
 ﻿use master
 go
 
-if exists(select * from sys.databases where name='DaOAuth')
-	drop database [DaOAuth]
+if exists(select * from sys.databases where name='DaOAuth_Dev')
+	drop database [DaOAuth_Dev]
 go
 
-create database  [DaOAuth]
+create database  [DaOAuth_Dev]
 go
 
-use [DaOAuth]
+use [DaOAuth_Dev]
 go
 
 begin
@@ -45,6 +45,7 @@ create table auth.Codes
 	IsValid bit not null,
 	Scope nvarchar(max) null,
 	UserName nvarchar(32) not null,
+	UserPublicId uniqueidentifier not null,
 	FK_Client integer not null foreign key references auth.Clients(Id)
 )
 go
@@ -67,6 +68,7 @@ create table auth.UsersClients
 	FK_User integer not null foreign key references auth.Users(Id),
 	FK_Client integer not null foreign key references auth.Clients(Id),
 	CreationDate datetime not null,
+	UserPublicId uniqueidentifier not null unique,
 	RefreshToken nvarchar(512) null,
 	IsValid bit not null
 )
@@ -107,7 +109,7 @@ go
 insert into auth.Scopes(FK_Client, wording, NiceWording) values (2, 'account:read', 'plap')
 go
 
-insert into auth.Scopes(FK_Client, wording, NiceWording) values (3, 'daget:account:rw', 'Gestion des comptes (Lecture et écriture)')
+insert into auth.Scopes(FK_Client, wording, NiceWording) values (3, 'daget:bankaccount:rw', 'Gestion des comptes (Lecture et écriture)')
 insert into auth.Scopes(FK_Client, wording, NiceWording) values (3, 'daget:operation:rw', 'Saisir des opérations (Lecture et écriture)')
 go
 

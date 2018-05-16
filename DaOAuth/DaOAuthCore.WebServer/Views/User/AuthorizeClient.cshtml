@@ -1,0 +1,74 @@
+﻿@model DaOAuthCore.WebServer.Models.AuthorizeClientViewModel
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="/css/site.min.css" asp-append-version="true" rel="stylesheet" />
+    <link href="/css/bootstrap-datepicker.css" rel="stylesheet" />
+    <link href="/css/font-awesome.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="/js/bootstrap-datepicker.min.js"></script>
+    <script src="/js/locales/bootstrap-datepicker.fr.min.js"></script>
+    <script src="/js/bootbox.min.js"></script>
+
+    <title>Authoriser une application</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <strong>DaOAuth</strong>
+    </nav>
+
+    <main role="main" class="container">
+        <div class="container">
+            <div class="row">
+                <div class="col-6 offset-2">
+                    <h2>L'application @Model.ClientName demande l'accès à vos données</h2>
+                    @if(Model.Scope != null && Model.Scope.Count() > 0)
+                    {
+                        <h5>Les authorisations suivantes sont requises :</h5>
+                        <ul>
+                            @foreach(var s in Model.Scope.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <li>@s</li>
+                            }
+                        </ul>
+                    }
+                </div>
+
+                <div class="col-6 offset-2">
+                    <form method="post" id="myForm">
+                        @Html.HiddenFor(m => m.ClientId)
+                        @Html.HiddenFor(m => m.RedirectUrl)
+                        @Html.HiddenFor(m => m.ResponseType)
+                        @Html.HiddenFor(m => m.State)
+                        @Html.HiddenFor(m => m.IsValid)
+                        @Html.HiddenFor(m => m.Scope)
+                    <button class="btn btn-outline-success btn-block" type="submit">Accepter</button>
+                </form>
+                <button class="btn btn-outline-success btn-block" id="btnCancel" type="button">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $('#btnCancel').bind('click', function () {
+            $('#IsValid').val(false);
+            $('#myForm').submit();
+        });
+    </script>
+
+    </main>
+
+</body>
+</html>
