@@ -1,6 +1,5 @@
 ﻿using DaOAuthCore.Service;
 using DaOAuthCore.WebServer.Models;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -141,14 +140,9 @@ namespace DaOAuthCore.WebServer.Controllers
             if (String.IsNullOrEmpty(model.token))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "le token est obligatoire");
 
-            // décryptage du token
-            JwtSecurityToken decryptedToken = null;
-            var handler = new JwtSecurityTokenHandler();
-            if (handler.CanReadToken(model.token))
-                decryptedToken = (JwtSecurityToken)handler.ReadToken(model.token);
-
+            ClaimsPrincipal user;
             long expire = 0;
-            if(!CheckIfTokenIsValid(decryptedToken, ACCESS_TOKEN_NAME, out expire))
+            if (!CheckIfTokenIsValid(model.token, ACCESS_TOKEN_NAME, out expire, out user))
             {
                 return Json(new
                 {
@@ -157,10 +151,10 @@ namespace DaOAuthCore.WebServer.Controllers
             }
 
             // on récupère les infos
-            string scope = GetValueFromClaim(decryptedToken.Claims, "scope");
-            var clientId = GetValueFromClaim(decryptedToken.Claims, "client_id");
-            var userName = GetValueFromClaim(decryptedToken.Claims, ClaimTypes.NameIdentifier);
-            var userPublicId = GetValueFromClaim(decryptedToken.Claims, "user_public_id");
+            string scope = GetValueFromClaim(user.Claims, "scope");
+            var clientId = GetValueFromClaim(user.Claims, "client_id");
+            var userName = GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
+            var userPublicId = GetValueFromClaim(user.Claims, "user_public_id");
 
             return Json(new
             {
@@ -175,16 +169,35 @@ namespace DaOAuthCore.WebServer.Controllers
 
         #region private
 
-        private bool CheckIfTokenIsValid(JwtSecurityToken token, string token_name, out long expire)
+        private bool CheckIfTokenIsValid(string token, string token_name, out long expire, out ClaimsPrincipal user)
         {
             expire = 0;
+            user = null;
 
-            if (token == null)
+            if (String.IsNullOrEmpty(token))
                 return false;
-            
-            long.TryParse(GetValueFromClaim(token.Claims, "exp"), out expire);
 
-            if (expire < DateTimeOffset.Now.ToUnixTimeSeconds() || GetValueFromClaim(token.Claims, "token_name") != token_name)
+            var handler = new JwtSecurityTokenHandler();
+            TokenValidationParameters validationParameters = new TokenValidationParameters
+            {
+                ValidIssuer = "DaOAuth",
+                ValidAudience = "DaOAuth",                
+                IssuerSigningKeys = new List<SecurityKey>() { new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.SecurityKey)) }
+            };
+
+            SecurityToken validatedToken;
+            try
+            {
+                user = handler.ValidateToken(token, validationParameters, out validatedToken);
+            }
+            catch
+            {
+                return false;
+            }     
+
+            long.TryParse(GetValueFromClaim(user.Claims, "exp"), out expire);
+
+            if (expire < DateTimeOffset.Now.ToUnixTimeSeconds() || GetValueFromClaim(user.Claims, "token_name") != token_name)
                 return false;
 
             return true;
@@ -239,20 +252,16 @@ namespace DaOAuthCore.WebServer.Controllers
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "refresh_token", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
 
             // analyse du refresh token
-            JwtSecurityToken decryptedToken = null;
-            var handler = new JwtSecurityTokenHandler();
-            if (handler.CanReadToken(model.refresh_token))
-                decryptedToken = (JwtSecurityToken)handler.ReadToken(model.refresh_token);
-
+            ClaimsPrincipal user;
             long expire = 0;
-            if (!CheckIfTokenIsValid(decryptedToken, REFRESH_TOKEN_NAME, out expire))
-                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
+            if (!CheckIfTokenIsValid(model.refresh_token, REFRESH_TOKEN_NAME, out expire, out user))
+                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");         
 
             // on récupère les infos
-            string scope = GetValueFromClaim(decryptedToken.Claims, "scope");
-            var clientId = GetValueFromClaim(decryptedToken.Claims, "client_id");
-            var userName = GetValueFromClaim(decryptedToken.Claims, ClaimTypes.NameIdentifier);
-            Guid userPublicId  = Guid.Parse(GetValueFromClaim(decryptedToken.Claims, "user_public_id"));
+            string scope = GetValueFromClaim(user.Claims, "scope");
+            var clientId = GetValueFromClaim(user.Claims, "client_id");
+            var userName = GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
+            Guid userPublicId = Guid.Parse(GetValueFromClaim(user.Claims, "user_public_id"));
 
             // vérifier que le token n'ai pas été révoqué
             if (!_clientService.IsRefreshTokenValid(userName, clientId, model.refresh_token))
@@ -384,7 +393,6 @@ namespace DaOAuthCore.WebServer.Controllers
             claims.Add(new Claim("client_id", clientId));
             claims.Add(new Claim("token_name", tokenName));
             claims.Add(new Claim("issued", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()));
-            claims.Add(new Claim("entropie", Guid.NewGuid().ToString()));
             claims.Add(new Claim("user_public_id", userPublicId.HasValue ? userPublicId.Value.ToString() : String.Empty));
             claims.Add(new Claim(ClaimTypes.NameIdentifier, !String.IsNullOrEmpty(userName) ? userName : String.Empty));
             claims.Add(new Claim("scope", !String.IsNullOrEmpty(scope) ? scope : String.Empty));
@@ -393,7 +401,8 @@ namespace DaOAuthCore.WebServer.Controllers
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: "DaOauth",
+                issuer: "DaOAuth",
+                audience: "DaOAuth",
                 claims: claims,
                 signingCredentials: creds,
                 expires: DateTime.Now.AddMinutes(minutesLifeTime));

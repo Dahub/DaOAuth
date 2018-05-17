@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="appsettings.DaOAuthCoreWebServer20180516112650 - Web Deploy.json" />
+    <Content Remove="appsettings.Debug.json" />
+    <Content Remove="appsettings.ProdLocale.json" />
+    <Content Remove="appsettings.Release.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="wwwroot\fonts\fontawesome-webfont.eot" />
     <None Remove="wwwroot\fonts\fontawesome-webfont.svg" />
     <None Remove="wwwroot\fonts\fontawesome-webfont.ttf" />
@@ -121,6 +128,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="2.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.3" />
+    <PackageReference Include="Microsoft.VisualStudio.SlowCheetah" Version="3.0.61" />
   </ItemGroup>
 
   <ItemGroup>
@@ -128,6 +136,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="appsettings.DaOAuthCoreWebServer20180516112650 - Web Deploy.json">
+      <IsTransformFile>True</IsTransformFile>
+    </None>
+    <None Include="appsettings.Debug.json">
+      <IsTransformFile>True</IsTransformFile>
+    </None>
+    <None Include="appsettings.ProdLocale.json">
+      <IsTransformFile>True</IsTransformFile>
+    </None>
+    <None Include="appsettings.Release.json">
+      <IsTransformFile>True</IsTransformFile>
+    </None>
     <None Include="wwwroot\js\jquery-3.0.0-vsdoc.js" />
   </ItemGroup>
 
@@ -144,6 +164,7 @@
   <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TransformOnBuild>true</TransformOnBuild>
     </Content>
     <Content Update="wwwroot\css\Site.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

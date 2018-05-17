@@ -12,13 +12,11 @@ namespace DaOAuthCore.Dal.EF
         public DaOAuthContext(string cs) : base()
         {
             _connexionString = cs;
-            // Database.SetInitializer<DaOAuthContext>(null);
         }
         
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            //optionsBuilder.UseSqlServer(_connexionString);
-            optionsBuilder.UseSqlServer(@"Server=localhost\SQLEXPRESS;Database=DaOAuth_Dev;Trusted_Connection=True;");
+            optionsBuilder.UseSqlServer(_connexionString);
         }
 
         public DbSet<Client> Clients { get; set; }
