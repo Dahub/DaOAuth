@@ -14,7 +14,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientRepo = Factory.GetClientRepository(context);
                     toReturn = clientRepo.GetAllByUserName(userName).ToDto();
@@ -38,7 +38,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientRepo = Factory.GetClientRepository(context);
                     var client = clientRepo.GetByPublicId(publicId);
@@ -66,7 +66,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
                     toReturn = clientUserRepo.GetUserClientByUserNameAndClientPublicId(publicId, userName) != null;
@@ -90,7 +90,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
                     var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(publicId, userName);
@@ -118,7 +118,7 @@ namespace DaOAuthCore.Service
                 if (!String.IsNullOrEmpty(scope))
                     scopes = scope.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var scopeRepo = Factory.GetScopeRepository(context);
                     
@@ -153,7 +153,7 @@ namespace DaOAuthCore.Service
         {
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientRepo = Factory.GetClientRepository(context);
                     var userRepo = Factory.GetUserRepository(context);
@@ -242,7 +242,7 @@ namespace DaOAuthCore.Service
                     string clientPublicId = credentials.Substring(0, separatorIndex);
                     string clientSecret = credentials.Substring(separatorIndex + 1);
 
-                    using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                    using (var context = Factory.CreateContext(ConnexionString))
                     {
                         var clientRepo = Factory.GetClientRepository(context);
                         var client = clientRepo.GetByPublicId(clientPublicId);
@@ -340,7 +340,7 @@ namespace DaOAuthCore.Service
         {
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
                     var client = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientPublicId, userName);
@@ -362,7 +362,7 @@ namespace DaOAuthCore.Service
         {
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
                     var client = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientPublicId, userName);
@@ -409,7 +409,7 @@ namespace DaOAuthCore.Service
                     PublicId = RandomMaker.GenerateRandomString(16)
                 };
 
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientRepo = Factory.GetClientRepository(context);
                     clientRepo.Add(result);
@@ -434,7 +434,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     // récupération du client
                     var clientRepo = Factory.GetClientRepository(context);
@@ -488,7 +488,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
                     var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(client_id, username);
@@ -509,7 +509,7 @@ namespace DaOAuthCore.Service
 
         private bool CheckIfCodeIsValid(string clientPublicId, string code, out Code myCode)
         {
-            using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+            using (var context = Factory.CreateContext(ConnexionString))
             {
                 var codeRepo = Factory.GetCodeRepository(context);
                 var codes = codeRepo.GetAllByClientId(clientPublicId);
@@ -542,7 +542,7 @@ namespace DaOAuthCore.Service
 
         private bool CheckIfClientIsValid(string clientPublicId, string requestRedirectUri, EClientType clientType)
         {
-            using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+            using (var context = Factory.CreateContext(ConnexionString))
             {
                 var clientRepo = Factory.GetClientRepository(context);
                 var client = clientRepo.GetByPublicId(clientPublicId);

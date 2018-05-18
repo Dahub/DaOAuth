@@ -11,7 +11,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientRepo = Factory.GetUserClientRepository(context);
                     toReturn = clientRepo.GetAllByUserName(userName).ToDto();

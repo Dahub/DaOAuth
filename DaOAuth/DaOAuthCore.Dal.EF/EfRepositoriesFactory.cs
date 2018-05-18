@@ -1,4 +1,5 @@
 ﻿using DaOAuthCore.Dal.Interface;
+using Microsoft.EntityFrameworkCore;
 
 namespace DaOAuthCore.Dal.EF
 {
@@ -6,7 +7,9 @@ namespace DaOAuthCore.Dal.EF
     {
         public IContext CreateContext(string connexion)
         {
-            return new DaOAuthContext(connexion);           
+            var builder = new DbContextOptionsBuilder<DaOAuthContext>();
+            builder.UseSqlServer(connexion, b => b.MigrationsAssembly("DaOAuthCore.WebServer"));
+            return new DaOAuthContext(builder.Options);           
         }
 
         public IUserRepository GetUserRepository(IContext context)

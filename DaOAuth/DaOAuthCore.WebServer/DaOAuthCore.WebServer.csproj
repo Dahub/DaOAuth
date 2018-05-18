@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20180518201027_Init.cs" />
+    <Compile Remove="Migrations\20180518201027_Init.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="appsettings.DaOAuthCoreWebServer20180516112650 - Web Deploy.json" />
     <Content Remove="appsettings.Debug.json" />
     <Content Remove="appsettings.ProdLocale.json" />
@@ -128,7 +133,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="2.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.3" />
-    <PackageReference Include="Microsoft.VisualStudio.SlowCheetah" Version="3.0.61" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.3" />
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.3" />
   </ItemGroup>
 
   <ItemGroup>

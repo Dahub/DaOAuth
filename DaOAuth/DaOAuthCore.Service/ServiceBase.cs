@@ -9,6 +9,7 @@ namespace DaOAuthCore.Service
     {
         public AppConfiguration Configuration { get; set; }
         public IRepositoriesFactory Factory { get; set; }
+        public string ConnexionString { get; set; }
 
         protected bool AreEqualsSha1(string toCompare, byte[] hash)
         {

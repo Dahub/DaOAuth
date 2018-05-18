@@ -5,19 +5,9 @@ using System;
 
 namespace DaOAuthCore.Dal.EF
 {
-    internal class DaOAuthContext : DbContext, IContext
+    public class DaOAuthContext : DbContext, IContext
     {
-        private string _connexionString;
-
-        public DaOAuthContext(string cs) : base()
-        {
-            _connexionString = cs;
-        }
-        
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer(_connexionString);
-        }
+        public DaOAuthContext(DbContextOptions options) : base(options) { }
 
         public DbSet<Client> Clients { get; set; }
         public DbSet<Code> Codes { get; set; }
@@ -39,7 +29,7 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<User>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
             modelBuilder.Entity<User>().Property(p => p.Password).HasColumnName("Password").HasColumnType("varbinary(50)").HasMaxLength(50);
             modelBuilder.Entity<User>().Property(p => p.UserName).HasColumnName("UserName").HasColumnType("nvarchar(32)").HasMaxLength(32).IsRequired();
-          
+
             modelBuilder.Entity<ClientType>().ToTable("ClientsTypes");
             modelBuilder.Entity<ClientType>().HasKey(c => c.Id);
             modelBuilder.Entity<ClientType>().Property(p => p.Id).HasColumnName("Id").HasColumnType("int").IsRequired();
@@ -54,7 +44,7 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<Client>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.Name).HasColumnName("Name").HasColumnType("nvarchar(256)").HasMaxLength(256).IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.PublicId).HasColumnName("PublicId").HasColumnType("nvarchar(256)").HasMaxLength(256).IsRequired();
-            modelBuilder.Entity<Client>().Property(p => p.ClientSecret).HasColumnName("ClientSecret").HasColumnType("varbinary(50)").HasMaxLength(50);           
+            modelBuilder.Entity<Client>().Property(p => p.ClientSecret).HasColumnName("ClientSecret").HasColumnType("varbinary(50)").HasMaxLength(50);
             modelBuilder.Entity<Client>().HasMany<Code>(c => c.Codes).WithOne(c => c.Client).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Client>().HasMany<Scope>(c => c.Scopes).WithOne(c => c.Client).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Client>().Property(p => p.ClientTypeId).HasColumnName("FK_ClientType").HasColumnType("int").IsRequired();
@@ -66,7 +56,7 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<Scope>().Property(p => p.Wording).HasColumnName("Wording").HasColumnType("nvarchar(max)");
             modelBuilder.Entity<Scope>().Property(p => p.NiceWording).HasColumnName("NiceWording").HasColumnType("nvarchar(512)").HasMaxLength(512);
             modelBuilder.Entity<Scope>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
-            modelBuilder.Entity<Scope>().HasOne<Client>(s => s.Client).WithMany(c=> c.Scopes).HasForeignKey(c => c.ClientId);
+            modelBuilder.Entity<Scope>().HasOne<Client>(s => s.Client).WithMany(c => c.Scopes).HasForeignKey(c => c.ClientId);
 
             modelBuilder.Entity<Code>().ToTable("Codes");
             modelBuilder.Entity<Code>().HasKey(c => c.Id);
@@ -94,7 +84,7 @@ namespace DaOAuthCore.Dal.EF
         }
 
         public void Commit()
-        {            
+        {
             this.SaveChanges();
         }
 

@@ -33,20 +33,23 @@ namespace DaOAuthCore.WebServer
                        options.LoginPath = new PathString("/Home/Index");
                    });
 
-            services.AddSingleton<IClientService>(new ClientService()
+            services.AddScoped<IClientService>(c => new ClientService()
             {
                 Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
-                Factory = new EfRepositoriesFactory()
+                Factory = new EfRepositoriesFactory(),
+                ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
             });
-            services.AddSingleton<IUserClientService>(new UserClientService()
+            services.AddScoped<IUserClientService>(u => new UserClientService()
             {
                 Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
-                Factory = new EfRepositoriesFactory()
+                Factory = new EfRepositoriesFactory(),
+                ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
             });
-            services.AddSingleton<IUserService>(new UserService()
+            services.AddScoped<IUserService>(u => new UserService()
             {
                 Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
-                Factory = new EfRepositoriesFactory()
+                Factory = new EfRepositoriesFactory(),
+                ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
             });
 
             services.AddMvc();

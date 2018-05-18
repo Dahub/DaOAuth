@@ -11,7 +11,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var userRepo = Factory.GetUserRepository(context);
 
@@ -41,7 +41,7 @@ namespace DaOAuthCore.Service
 
             try
             {
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var userRepo = Factory.GetUserRepository(context);
                     toReturn = userRepo.GetByUserName(userName) != null;
@@ -67,7 +67,7 @@ namespace DaOAuthCore.Service
                     throw new DaOauthServiceException("Le mot de passe n'est pas renseigné");
 
                 // vérification que l'user name n'existe pas déjà
-                using (var context = Factory.CreateContext(Configuration.DaOAuthConnexionString))
+                using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var userRepo = Factory.GetUserRepository(context);
                     if (userRepo.GetByUserName(toCreate.UserName) != null)

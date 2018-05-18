@@ -115,9 +115,9 @@ namespace DaOAuthCore.WebServer.Controllers
                     case "refresh_token":
                         return GenerateTokenForRefreshToken(model);
                     case "password":
-                        return GenerateTokenFromPasswordGrant(model);
+                        return GenerateTokenForPasswordGrant(model);
                     case "client_credentials":
-                        return GenerateTokenFromClientCredentailsGrant(model);
+                        return GenerateTokenForClientCredentailsGrant(model);
                     default:
                         return GenerateErrorResponse(HttpStatusCode.BadRequest, "unsupported_grant_type", "grant_type non pris en charge");
                 }
@@ -223,7 +223,7 @@ namespace DaOAuthCore.WebServer.Controllers
             return Redirect(location);
         }
 
-        private JsonResult GenerateTokenFromClientCredentailsGrant(TokenModel model)
+        private JsonResult GenerateTokenForClientCredentailsGrant(TokenModel model)
         {
             JsonResult toReturnIfError;
             if (!CheckAuthorizationHeader(out toReturnIfError))
@@ -302,7 +302,7 @@ namespace DaOAuthCore.WebServer.Controllers
             return GenerateAccesTokenAndUpdateRefreshToken(model, codeInfos.UserName, codeInfos.Scope, codeInfos.UserPublicId);
         }
 
-        private JsonResult GenerateTokenFromPasswordGrant(TokenModel model)
+        private JsonResult GenerateTokenForPasswordGrant(TokenModel model)
         {
             /* RFC6749 4.3.2 : Since this access token request utilizes the resource owner's
             password, the authorization server MUST protect the endpoint against
