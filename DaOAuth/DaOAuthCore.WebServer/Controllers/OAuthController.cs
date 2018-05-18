@@ -44,7 +44,7 @@ namespace DaOAuthCore.WebServer.Controllers
                 return StatusCode((int)HttpStatusCode.BadRequest, "l'url de redirection est incorrecte");
 
             if (String.IsNullOrEmpty(response_type))
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre response_type est requis", state));
+                return Redirect( GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre response_type est requis", state));
 
             if (String.IsNullOrEmpty(client_id))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre client_id est requis", state));
@@ -210,7 +210,7 @@ namespace DaOAuthCore.WebServer.Controllers
             location = String.Concat(redirectUri, "?token=", myToken, "?token_type=bearer?expires_in", ACCESS_TOKEN_LIFETIME * 60);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
-            return Redirect(location);
+            return Redirect(new Uri(location).AbsoluteUri);
         }
 
         private ActionResult RedirectForResponseTypeCode(string clientId, string state, string redirectUri, string userName, string scope, Guid userPublicId)
@@ -220,7 +220,7 @@ namespace DaOAuthCore.WebServer.Controllers
             location = String.Concat(redirectUri, "?code=", myCode);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
-            return Redirect(location);
+            return Redirect(new Uri(location).AbsoluteUri);
         }
 
         private JsonResult GenerateTokenForClientCredentailsGrant(TokenModel model)
@@ -413,9 +413,10 @@ namespace DaOAuthCore.WebServer.Controllers
         private string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, string stateInfo)
         {
             if (String.IsNullOrEmpty(stateInfo))
-                return GenerateRedirectErrorMessage(redirectUri, errorName, errorDescription);
+                return GenerateRedirectErrorMessage(redirectUri, errorName, errorDescription);            
 
-            return String.Format("{0}?error={1}&error_description={2}&state={3}", redirectUri, errorName, errorDescription, stateInfo);
+            Uri uri = new Uri(String.Format("{0}?error={1}&error_description={2}&state={3}", redirectUri, errorName, errorDescription, stateInfo));
+            return uri.AbsoluteUri;
         }
 
         private string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription)
