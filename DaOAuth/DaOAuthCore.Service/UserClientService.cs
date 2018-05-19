@@ -28,5 +28,56 @@ namespace DaOAuthCore.Service
 
             return toReturn;
         }
+
+        public void RevokeClient(string client_id, string username)
+        {
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(client_id, username);
+                    if (clientUser != null)
+                    {
+                        clientUserRepo.Delete(clientUser);
+                        context.Commit();
+                    }
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors de la révocation du client", ex);
+            }
+        }
+
+        public void ChangeAuthorizationClient(string client_id, bool authorize, string username)
+        {
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var clientUserRepo = Factory.GetUserClientRepository(context);
+                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(client_id, username);
+                    if (clientUser != null)
+                    {
+                        clientUser.IsValid = authorize;
+                        clientUserRepo.Update(clientUser);
+                        context.Commit();
+                    }
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors du changement d'authorisation du client", ex);
+            }
+        }
     }
 }

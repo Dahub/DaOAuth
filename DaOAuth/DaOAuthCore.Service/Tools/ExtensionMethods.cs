@@ -11,6 +11,7 @@ namespace DaOAuthCore.Service
         {
             UserClientDto toReturn = new UserClientDto()
             {
+                ClientId = value.Client.PublicId,
                 ClientDescription = value.Client.Description,
                 ClientName = value.Client.Name,
                 IsAuthorize = value.IsValid

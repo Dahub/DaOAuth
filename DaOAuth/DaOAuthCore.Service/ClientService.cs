@@ -86,7 +86,7 @@ namespace DaOAuthCore.Service
 
         public bool IsClientAuthorizeByUser(string publicId, string userName, out Guid userPublicId)
         {
-            bool toReturn = false;            
+            bool toReturn = false;
 
             try
             {
@@ -121,7 +121,7 @@ namespace DaOAuthCore.Service
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var scopeRepo = Factory.GetScopeRepository(context);
-                    
+
                     IEnumerable<string> clientScopes = scopeRepo.GetByClientPublicId(client_id).Select(s => s.Wording.ToUpper());
 
                     if ((scopes == null || scopes.Length == 0) && clientScopes.Count() == 0) // client sans scope défini
@@ -130,7 +130,7 @@ namespace DaOAuthCore.Service
                     if ((scopes == null || scopes.Length == 0) && clientScopes.Count() > 0) // client avec scopes définis
                         return false;
 
-                    foreach(var s in scopes)
+                    foreach (var s in scopes)
                     {
                         if (!clientScopes.Contains<string>(s.ToUpper()))
                             return false;
@@ -148,7 +148,7 @@ namespace DaOAuthCore.Service
                 throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation des scopes du client {0}", client_id), ex);
             }
         }
-       
+
         public void AuthorizeOrDeniedClientForUser(string publicId, string userName, bool authorize)
         {
             try
@@ -506,7 +506,7 @@ namespace DaOAuthCore.Service
 
             return toReturn;
         }
-
+      
         private bool CheckIfCodeIsValid(string clientPublicId, string code, out Code myCode)
         {
             using (var context = Factory.CreateContext(ConnexionString))

@@ -32,17 +32,48 @@ else
 }
 
 <script type="text/javascript">
-    var tt;
-    function reloadClients() {
+    function revokeClient(client_id, client_name) {
+        bootbox.confirm('Etes vous sur de vouloir retirer l\'accès au client ' + client_name + ' ?', function (result) {
+            if (result === true) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/UserClient/RevokeClient',
+                    data: { client_id: client_id },
+                    error: function (jqXHR, exception) {
+                        bootbox.alert(exception);
+                    }
+                }).done(function (data) {
+                    reloadClients();
+                });
+            }
+        });
+    }
+
+    function changeAuthorizationClient(client_id, is_authorize) {
         $.ajax({
-            type: 'GET',
-            url: '/Home/GetClients',
+            type: 'POST',
+            url: '/UserClient/ChangeAuthorizationClient',
+            data:
+            {
+                client_id: client_id,
+                authorize: is_authorize
+            },
             error: function (jqXHR, exception) {
                 bootbox.alert(exception);
             }
         }).done(function (data) {
-            tt = data;
-            console.log(data);
+            reloadClients();
+        });
+    }
+
+    function reloadClients() {
+        $.ajax({
+            type: 'GET',
+            url: '/UserClient/GetClients',
+            error: function (jqXHR, exception) {
+                bootbox.alert(exception);
+            }
+        }).done(function (data) {        
             $('#clientsDiv').html('');
             $.each(data, function (i, item) {
                 console.log(item);
@@ -56,6 +87,9 @@ else
                 html += '<h3>';
                 html += item.clientName;
                 html += '</h3>';
+                html += '<div class="row">';
+                html += '<div class="col-sm">';
+
                 html += '<p>';
                 html += item.clientDescription;
                 html += '</p>';
@@ -69,11 +103,22 @@ else
                     });
                 }
                 html += '</ul>';
+                html += '</div>'
+                html += '<div class="col-sm">';
+
+                if (item.isAuthorize === true) {
+                    html += '<button type="button" class="btn btn-outline-danger" onclick="changeAuthorizationClient(\'' + item.clientId + '\', false )">Bloquer</button><br /><br />';
+                }
+                else {
+                    html += '<button type="button" class="btn btn-outline-success" onclick="changeAuthorizationClient(\'' + item.clientId + '\', true )">Authoriser</button><br /><br />';
+                }
+
+                html += '<button type="button" class="btn btn-outline-secondary" onclick="revokeClient(\'' + item.clientId + '\', \'' + item.clientName + '\')">Revoquer</button>';
+                html += '</div>';
+                html += '</div>';
                 html += '</div></br />';
                 $('#clientsDiv').append(html);
             });
-           
-            
         });
     }
 </script>
