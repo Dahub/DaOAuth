@@ -8,6 +8,7 @@ namespace DaOAuthCore.WebServer.Models
         [Required(ErrorMessage = "Le nom d'utilisateur est obligatoire")]
         [MaxLength(32, ErrorMessage = "Le nom d'utilisateur ne doit pas excéder 32 caractères")]
         [Display(Name = "Nom d'utilisateur")]
+        [UserNameNotExists]
         public string UserName { get; set; }
 
         [Required(ErrorMessage = "Le mot de passe est obligatoire")]
