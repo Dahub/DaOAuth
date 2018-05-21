@@ -23,8 +23,8 @@ namespace DaOAuthCore.Dal.EF
 
         public IEnumerable<Scope> GetByClientPublicId(string clientPublicId)
         {
-            return ((DaOAuthContext)Context).Scopes.
-                Where(c => c.Client.PublicId.Equals(clientPublicId));
+            return ((DaOAuthContext)Context).ClientsScopes.
+              Where(c => c.Client.PublicId.Equals(clientPublicId)).Select(c => c.Scope);
         }
 
         public void Update(Scope toUpdate)

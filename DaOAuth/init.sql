@@ -77,9 +77,16 @@ go
 create table auth.Scopes
 (
 	Id integer not null primary key identity(1,1),
-	FK_Client integer not null foreign key references auth.Clients(Id),
 	Wording nvarchar(max) not null,
 	NiceWording nvarchar(512) not null
+)
+go
+
+create table auth.ScopesClients
+(
+	Id integer not null primary key identity(1,1),
+	FK_Client integer not null foreign key references auth.Clients(Id),
+	FK_Scope integer not null foreign key references auth.Scopes(Id)
 )
 go
 
@@ -102,15 +109,22 @@ insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, Creat
 values ('dEx5f12sPLEN5S09', HASHBYTES('SHA1', 'p-#d556cmzZSEDgvg'), 'DaGet Client', 'http://localhost:1234', getdate(), 1, 1, 'Client permettant d''utiliser l''API DaGet')
 go
 
-insert into auth.Scopes(FK_Client, wording, NiceWording) values (1, 'account:read:write', 'plop')
-insert into auth.Scopes(FK_Client, wording, NiceWording) values (1, 'operation:read:write', 'plip')
+insert into auth.Scopes(wording, NiceWording) values ('account:read:write', 'plop')
+insert into auth.Scopes(wording, NiceWording) values ('operation:read:write', 'plip')
 go
 
-insert into auth.Scopes(FK_Client, wording, NiceWording) values (2, 'account:read', 'plap')
+insert into auth.Scopes(wording, NiceWording) values ('account:read', 'plap')
 go
 
-insert into auth.Scopes(FK_Client, wording, NiceWording) values (3, 'daget:bankaccount:rw', 'Gestion des comptes (Lecture et écriture)')
-insert into auth.Scopes(FK_Client, wording, NiceWording) values (3, 'daget:operation:rw', 'Saisir des opérations (Lecture et écriture)')
+insert into auth.Scopes(wording, NiceWording) values ('daget:bankaccount:rw', 'Gestion des comptes (Lecture et écriture)')
+insert into auth.Scopes(wording, NiceWording) values ('daget:operation:rw', 'Saisir des opérations (Lecture et écriture)')
+go
+
+insert into auth.ScopesClients(FK_Client, FK_Scope) values (1, 1)
+insert into auth.ScopesClients(FK_Client, FK_Scope) values (1, 2)
+insert into auth.ScopesClients(FK_Client, FK_Scope) values (2, 3)
+insert into auth.ScopesClients(FK_Client, FK_Scope) values (3, 4)
+insert into auth.ScopesClients(FK_Client, FK_Scope) values (3, 5)
 go
 
 select * from auth.Scopes

@@ -15,6 +15,7 @@ namespace DaOAuthCore.Dal.EF
         public DbSet<User> Users { get; set; }
         public DbSet<UserClient> UsersClients { get; set; }
         public DbSet<Scope> Scopes { get; set; }
+        public DbSet<ClientScope> ClientsScopes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,7 +47,7 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<Client>().Property(p => p.PublicId).HasColumnName("PublicId").HasColumnType("nvarchar(256)").HasMaxLength(256).IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.ClientSecret).HasColumnName("ClientSecret").HasColumnType("varbinary(50)").HasMaxLength(50);
             modelBuilder.Entity<Client>().HasMany<Code>(c => c.Codes).WithOne(c => c.Client).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Client>().HasMany<Scope>(c => c.Scopes).WithOne(c => c.Client).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Client>().HasMany<ClientScope>(c => c.ClientsScopes).WithOne(c => c.Client).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Client>().Property(p => p.ClientTypeId).HasColumnName("FK_ClientType").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Client>().HasOne<ClientType>(c => c.ClientType).WithMany(ct => ct.Clients).HasForeignKey(ct => ct.ClientTypeId);
 
@@ -55,8 +56,7 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<Scope>().Property(p => p.Id).HasColumnName("Id").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Scope>().Property(p => p.Wording).HasColumnName("Wording").HasColumnType("nvarchar(max)");
             modelBuilder.Entity<Scope>().Property(p => p.NiceWording).HasColumnName("NiceWording").HasColumnType("nvarchar(512)").HasMaxLength(512);
-            modelBuilder.Entity<Scope>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
-            modelBuilder.Entity<Scope>().HasOne<Client>(s => s.Client).WithMany(c => c.Scopes).HasForeignKey(c => c.ClientId);
+            modelBuilder.Entity<Scope>().HasMany<ClientScope>(c => c.ClientsScopes).WithOne(c => c.Scope).OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Code>().ToTable("Codes");
             modelBuilder.Entity<Code>().HasKey(c => c.Id);
@@ -81,6 +81,13 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<UserClient>().Property(p => p.CreationDate).HasColumnName("CreationDate").HasColumnType("datetime").IsRequired();
             modelBuilder.Entity<UserClient>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
             modelBuilder.Entity<UserClient>().Property(p => p.RefreshToken).HasColumnName("RefreshToken").HasColumnType("nvarchar(512)").HasMaxLength(512);
+
+            modelBuilder.Entity<ClientScope>().ToTable("ClientsScopes");
+            modelBuilder.Entity<ClientScope>().HasKey(c => c.Id);
+            modelBuilder.Entity<ClientScope>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<ClientScope>().HasOne<Client>(c => c.Client).WithMany(g => g.ClientsScopes).HasForeignKey(c => c.ClientId);
+            modelBuilder.Entity<ClientScope>().Property(p => p.ScopeId).HasColumnName("FK_Scope").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<ClientScope>().HasOne<Scope>(c => c.Scope).WithMany(g => g.ClientsScopes).HasForeignKey(c => c.ScopeId);
         }
 
         public void Commit()

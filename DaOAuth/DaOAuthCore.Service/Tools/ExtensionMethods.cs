@@ -17,9 +17,9 @@ namespace DaOAuthCore.Service
                 IsAuthorize = value.IsValid
             };
 
-            if(value.Client.Scopes != null)
+            if(value.Client.ClientsScopes != null && value.Client.ClientsScopes.Count() > 0)
             {
-                string[] scopes = value.Client.Scopes.Select(s => s.NiceWording).ToArray();
+                string[] scopes = value.Client.ClientsScopes.Select(cs => cs.Scope.NiceWording).ToArray();
                 toReturn.ScopesNiceWordings = scopes;
             }
             else
@@ -73,7 +73,7 @@ namespace DaOAuthCore.Service
                 Name = value.Name,
                 PublicId = value.PublicId,
                 Description = value.Description,
-                Scopes = value.Scopes != null ? value.Scopes.Select(s => s.Wording).ToArray() : new string[] { }
+                Scopes = value.ClientsScopes != null ? value.ClientsScopes.Select(s => s.Scope.Wording).ToArray() : new string[] { }
             };
         }
 

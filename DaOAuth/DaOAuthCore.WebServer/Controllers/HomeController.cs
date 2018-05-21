@@ -1,9 +1,7 @@
 ﻿using DaOAuthCore.Service;
 using DaOAuthCore.WebServer.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using System.Security.Claims;
 
 namespace DaOAuthCore.WebServer.Controllers
 {

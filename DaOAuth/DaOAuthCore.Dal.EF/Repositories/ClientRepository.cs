@@ -18,7 +18,8 @@ namespace DaOAuthCore.Dal.EF
         public Client GetByPublicId(string publicId)
         {
             return ((DaOAuthContext)Context).Clients.
-                Include("Scopes").
+                Include(c => c.ClientsScopes).
+                ThenInclude(cs => cs.Scope).
                 Where(c => c.PublicId.Equals(publicId)).FirstOrDefault();
         }
 
@@ -31,6 +32,9 @@ namespace DaOAuthCore.Dal.EF
         public IEnumerable<Client> GetAllByUserName(string userName)
         {
             return ((DaOAuthContext)Context).UsersClients.
+                Include(uc => uc.Client).
+                Include(uc => uc.Client.ClientsScopes).
+                ThenInclude(cs => cs.Scope).
                 Where(c => c.User.UserName.Equals(userName)).Select(c => c.Client).Include("Scopes");
         }
     }

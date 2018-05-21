@@ -357,7 +357,8 @@ namespace DaOAuthCore.WebServer.Controllers
 
         private string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription)
         {
-            return String.Format("{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription);
+            Uri uri = new Uri(String.Format("{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription));
+            return uri.AbsoluteUri;
         }
 
         private JsonResult GenerateErrorResponse(HttpStatusCode statusCode, string errorName, string errorDescription, string stateInfo)
