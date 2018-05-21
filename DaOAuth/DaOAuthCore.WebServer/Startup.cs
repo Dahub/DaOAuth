@@ -1,6 +1,5 @@
 ﻿using DaOAuthCore.Dal.EF;
 using DaOAuthCore.Service;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -11,10 +10,12 @@ namespace DaOAuthCore.WebServer
 {
     public class Startup
     {
-        public Startup()
+        public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
-                    .AddJsonFile("appsettings.json")
+                    .SetBasePath(env.ContentRootPath)
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                     .AddEnvironmentVariables();
             Configuration = builder.Build();
         }
@@ -33,19 +34,28 @@ namespace DaOAuthCore.WebServer
                        options.LoginPath = new PathString("/Home/Index");
                    });
 
-            services.AddScoped<IClientService>(c => new ClientService()
+            services.AddTransient<IClientService>(c => new ClientService()
             {
                 Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
                 Factory = new EfRepositoriesFactory(),
                 ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
             });
-            services.AddScoped<IUserClientService>(u => new UserClientService()
+
+            services.AddTransient<IUserClientService>(u => new UserClientService()
             {
                 Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
                 Factory = new EfRepositoriesFactory(),
                 ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
             });
-            services.AddScoped<IUserService>(u => new UserService()
+
+            services.AddTransient<IUserService>(u => new UserService()
+            {
+                Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
+                Factory = new EfRepositoriesFactory(),
+                ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
+            });
+
+            services.AddTransient<IJwtService>(u => new JwtService()
             {
                 Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
                 Factory = new EfRepositoriesFactory(),

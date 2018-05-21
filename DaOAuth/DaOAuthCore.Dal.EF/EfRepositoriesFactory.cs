@@ -9,6 +9,7 @@ namespace DaOAuthCore.Dal.EF
         {
             var builder = new DbContextOptionsBuilder<DaOAuthContext>();
             builder.UseSqlServer(connexion, b => b.MigrationsAssembly("DaOAuthCore.WebServer"));
+            
             return new DaOAuthContext(builder.Options);           
         }
 

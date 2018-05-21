@@ -3,14 +3,10 @@ using DaOAuthCore.WebServer.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
-using System.Text;
 using System.Threading;
 
 namespace DaOAuthCore.WebServer.Controllers
@@ -20,17 +16,19 @@ namespace DaOAuthCore.WebServer.Controllers
         private IClientService _clientService;
         private IUserService _userService;
         private AppConfiguration _configuration;
+        private IJwtService _jwtService;
 
         private const int ACCESS_TOKEN_LIFETIME = 10; // temps en minutes
         private const int REFRESH_TOKEN_LIFETIME = 10 * 365 * 24 * 60; // 5256000 => 10 ans exprimés en minutes
         private const string ACCESS_TOKEN_NAME = "access_token";
         private const string REFRESH_TOKEN_NAME = "refresh_token";
 
-        public OAuthController([FromServices] IClientService cs, [FromServices] IUserService us, IOptions<AppConfiguration> conf)
+        public OAuthController([FromServices] IClientService cs, [FromServices] IUserService us, [FromServices] IJwtService js, IOptions<AppConfiguration> conf)
         {
             _clientService = cs;
             _userService = us;
-            _configuration = conf.Value;
+            _jwtService = js;
+            _configuration = conf.Value;            
         }
 
         [AllowAnonymous]
@@ -142,7 +140,7 @@ namespace DaOAuthCore.WebServer.Controllers
 
             ClaimsPrincipal user;
             long expire = 0;
-            if (!CheckIfTokenIsValid(model.token, ACCESS_TOKEN_NAME, out expire, out user))
+            if (!_jwtService.CheckIfTokenIsValid(model.token, ACCESS_TOKEN_NAME, out expire, out user))
             {
                 return Json(new
                 {
@@ -151,10 +149,10 @@ namespace DaOAuthCore.WebServer.Controllers
             }
 
             // on récupère les infos
-            string scope = GetValueFromClaim(user.Claims, "scope");
-            var clientId = GetValueFromClaim(user.Claims, "client_id");
-            var userName = GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
-            var userPublicId = GetValueFromClaim(user.Claims, "user_public_id");
+            string scope = _jwtService.GetValueFromClaim(user.Claims, "scope");
+            var clientId = _jwtService.GetValueFromClaim(user.Claims, "client_id");
+            var userName = _jwtService.GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
+            var userPublicId = _jwtService.GetValueFromClaim(user.Claims, "user_public_id");
 
             return Json(new
             {
@@ -167,46 +165,12 @@ namespace DaOAuthCore.WebServer.Controllers
             });
         }
 
-        #region private
-
-        private bool CheckIfTokenIsValid(string token, string token_name, out long expire, out ClaimsPrincipal user)
-        {
-            expire = 0;
-            user = null;
-
-            if (String.IsNullOrEmpty(token))
-                return false;
-
-            var handler = new JwtSecurityTokenHandler();
-            TokenValidationParameters validationParameters = new TokenValidationParameters
-            {
-                ValidIssuer = "DaOAuth",
-                ValidAudience = "DaOAuth",                
-                IssuerSigningKeys = new List<SecurityKey>() { new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.SecurityKey)) }
-            };
-
-            SecurityToken validatedToken;
-            try
-            {
-                user = handler.ValidateToken(token, validationParameters, out validatedToken);
-            }
-            catch
-            {
-                return false;
-            }     
-
-            long.TryParse(GetValueFromClaim(user.Claims, "exp"), out expire);
-
-            if (expire < DateTimeOffset.Now.ToUnixTimeSeconds() || GetValueFromClaim(user.Claims, "token_name") != token_name)
-                return false;
-
-            return true;
-        }
+        #region private        
 
         private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, string userName, string scope, Guid userPublicId)
         {
             string location = String.Empty;
-            var myToken = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, clientId, scope, userPublicId);
+            var myToken = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, clientId, scope, userPublicId);
             location = String.Concat(redirectUri, "?token=", myToken, "?token_type=bearer?expires_in", ACCESS_TOKEN_LIFETIME * 60);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
@@ -236,7 +200,7 @@ namespace DaOAuthCore.WebServer.Controllers
 
             return Json(new
             {
-                access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, clientId, model.scope, null),
+                access_token = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, clientId, model.scope, null),
                 token_type = "bearer",
                 expires_in = ACCESS_TOKEN_LIFETIME * 60
             });
@@ -254,14 +218,14 @@ namespace DaOAuthCore.WebServer.Controllers
             // analyse du refresh token
             ClaimsPrincipal user;
             long expire = 0;
-            if (!CheckIfTokenIsValid(model.refresh_token, REFRESH_TOKEN_NAME, out expire, out user))
+            if (!_jwtService.CheckIfTokenIsValid(model.refresh_token, REFRESH_TOKEN_NAME, out expire, out user))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");         
 
             // on récupère les infos
-            string scope = GetValueFromClaim(user.Claims, "scope");
-            var clientId = GetValueFromClaim(user.Claims, "client_id");
-            var userName = GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
-            Guid userPublicId = Guid.Parse(GetValueFromClaim(user.Claims, "user_public_id"));
+            string scope = _jwtService.GetValueFromClaim(user.Claims, "scope");
+            var clientId = _jwtService.GetValueFromClaim(user.Claims, "client_id");
+            var userName = _jwtService.GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
+            Guid userPublicId = Guid.Parse(_jwtService.GetValueFromClaim(user.Claims, "user_public_id"));
 
             // vérifier que le token n'ai pas été révoqué
             if (!_clientService.IsRefreshTokenValid(userName, clientId, model.refresh_token))
@@ -336,12 +300,12 @@ namespace DaOAuthCore.WebServer.Controllers
 
         private JsonResult GenerateAccesTokenAndUpdateRefreshToken(TokenModel model, string userName, string scope, Guid userPublicId)
         {
-            string refreshToken = GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id, scope, userPublicId);
+            string refreshToken = _jwtService.GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id, scope, userPublicId);
             _clientService.UpdateRefreshTokenForClient(refreshToken, model.client_id, userName);
 
             return Json(new
             {
-                access_token = GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id, scope, userPublicId),
+                access_token = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id, scope, userPublicId),
                 token_type = "bearer",
                 expires_in = ACCESS_TOKEN_LIFETIME * 60, // en secondes
                 refresh_token = refreshToken,
@@ -380,34 +344,6 @@ namespace DaOAuthCore.WebServer.Controllers
             }
 
             return true;
-        }
-
-        private string GenerateToken(int minutesLifeTime, string tokenName, string clientId, string scope, Guid? userPublicId)
-        {
-            return GenerateToken(minutesLifeTime, tokenName, String.Empty, clientId, scope, userPublicId);
-        }
-
-        private string GenerateToken(int minutesLifeTime, string tokenName, string userName, string clientId, string scope, Guid? userPublicId)
-        {
-            IList<Claim> claims = new List<Claim>();
-            claims.Add(new Claim("client_id", clientId));
-            claims.Add(new Claim("token_name", tokenName));
-            claims.Add(new Claim("issued", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()));
-            claims.Add(new Claim("user_public_id", userPublicId.HasValue ? userPublicId.Value.ToString() : String.Empty));
-            claims.Add(new Claim(ClaimTypes.NameIdentifier, !String.IsNullOrEmpty(userName) ? userName : String.Empty));
-            claims.Add(new Claim("scope", !String.IsNullOrEmpty(scope) ? scope : String.Empty));
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.SecurityKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: "DaOAuth",
-                audience: "DaOAuth",
-                claims: claims,
-                signingCredentials: creds,
-                expires: DateTime.Now.AddMinutes(minutesLifeTime));
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         private string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, string stateInfo)
@@ -458,16 +394,6 @@ namespace DaOAuthCore.WebServer.Controllers
         {
             Uri u = null;
             return Uri.TryCreate(uri, UriKind.Absolute, out u);
-        }
-
-        private string GetValueFromClaim(IEnumerable<Claim> claims, string claimType)
-        {
-            var claim = claims.Where(c => c.Type.Equals(claimType)).FirstOrDefault();
-
-            if (claim == null)
-                return String.Empty;
-
-            return claim.Value;
         }
     }
 
