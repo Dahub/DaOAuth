@@ -8,5 +8,6 @@
         IUserRepository GetUserRepository(IContext context);
         IUserClientRepository GetUserClientRepository(IContext context);
         IScopeRepository GetScopeRepository(IContext context);
+        IRessourceServerRepository GetRessourceServerRepository(IContext context);
     }
 }

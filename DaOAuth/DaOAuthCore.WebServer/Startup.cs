@@ -62,6 +62,13 @@ namespace DaOAuthCore.WebServer
                 ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
             });
 
+            services.AddTransient<IRessourceServerService>(u => new RessourceServerService()
+            {
+                Configuration = Configuration.GetSection("AppConfiguration").Get<AppConfiguration>(),
+                Factory = new EfRepositoriesFactory(),
+                ConnexionString = Configuration.GetConnectionString("DaOAuthConnexionString")
+            });
+
             services.AddMvc();
         }
 

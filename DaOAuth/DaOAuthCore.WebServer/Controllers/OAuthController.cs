@@ -127,10 +127,15 @@ namespace DaOAuthCore.WebServer.Controllers
 
         [HttpPost]
         [Route("/introspect")]
-        public JsonResult Introspect([FromBody] IntrospectTokenModel model)
+        public JsonResult Introspect([FromServices] IRessourceServerService rsService, [FromBody] IntrospectTokenModel model)
         {
-            if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
-                return toReturnIfError;
+            if (!CheckAuthorizationHeaderForRessourceServer(rsService))
+            {
+                return Json(new
+                {
+                    active = false
+                });
+            }
 
             if (String.IsNullOrEmpty(model.token))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "le token est obligatoire");
@@ -298,6 +303,22 @@ namespace DaOAuthCore.WebServer.Controllers
                 refresh_token = refreshToken,
                 scope = String.IsNullOrEmpty(scope) ? String.Empty : scope
             });
+        }
+
+        private bool CheckAuthorizationHeaderForRessourceServer(IRessourceServerService serv)
+        {
+            if (!Request.Headers.ContainsKey("Authorization") || Request.Headers["Authorization"].Count != 1)
+                return false;
+
+            string[] authsInfos = Request.Headers["Authorization"].First().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (authsInfos.Length != 2)
+                return false;
+
+            if (!authsInfos[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return serv.AreRessourceServerCredentialsValid(authsInfos[1]);
         }
 
         private bool CheckAuthorizationHeader(out JsonResult result)

@@ -16,10 +16,19 @@ namespace DaOAuthCore.Dal.EF
         public DbSet<UserClient> UsersClients { get; set; }
         public DbSet<Scope> Scopes { get; set; }
         public DbSet<ClientScope> ClientsScopes { get; set; }
+        public DbSet<RessourceServer> RessourceServers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("auth");
+
+            modelBuilder.Entity<RessourceServer>().ToTable("RessourceServers");
+            modelBuilder.Entity<RessourceServer>().HasKey(rs => rs.Id);
+            modelBuilder.Entity<RessourceServer>().Property(rs => rs.Id).HasColumnName("Id").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<RessourceServer>().Property(rs => rs.Description).HasColumnName("Description").HasColumnType("nvarchar(max)");
+            modelBuilder.Entity<RessourceServer>().Property(rs => rs.Name).HasColumnName("Name").HasColumnType("nvarchar(256)").HasMaxLength(256).IsRequired();
+            modelBuilder.Entity<RessourceServer>().Property(rs => rs.Login).HasColumnName("Login").HasColumnType("nvarchar(256)").HasMaxLength(256).IsRequired();
+            modelBuilder.Entity<RessourceServer>().Property(rs => rs.ServerSecret).HasColumnName("ServerSecret").HasColumnType("varbinary(50)").HasMaxLength(50);
 
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<User>().HasKey(c => c.Id);

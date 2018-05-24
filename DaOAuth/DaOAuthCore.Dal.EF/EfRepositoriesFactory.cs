@@ -52,5 +52,13 @@ namespace DaOAuthCore.Dal.EF
                 Context = context
             };
         }
+
+        public IRessourceServerRepository GetRessourceServerRepository(IContext context)
+        {
+            return new RessourceServerRepository()
+            {
+                Context = context
+            };
+        }
     }
 }
