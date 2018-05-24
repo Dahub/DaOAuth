@@ -97,7 +97,7 @@ namespace DaOAuthCore.Dal.EF
 
         public async void CommitAsync()
         {
-            await this.SaveChangesAsync();
+            await SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

@@ -82,7 +82,7 @@ create table auth.Scopes
 )
 go
 
-create table auth.ScopesClients
+create table auth.ClientsScopes
 (
 	Id integer not null primary key identity(1,1),
 	FK_Client integer not null foreign key references auth.Clients(Id),
@@ -120,11 +120,11 @@ insert into auth.Scopes(wording, NiceWording) values ('daget:bankaccount:rw', 'G
 insert into auth.Scopes(wording, NiceWording) values ('daget:operation:rw', 'Saisir des opérations (Lecture et écriture)')
 go
 
-insert into auth.ScopesClients(FK_Client, FK_Scope) values (1, 1)
-insert into auth.ScopesClients(FK_Client, FK_Scope) values (1, 2)
-insert into auth.ScopesClients(FK_Client, FK_Scope) values (2, 3)
-insert into auth.ScopesClients(FK_Client, FK_Scope) values (3, 4)
-insert into auth.ScopesClients(FK_Client, FK_Scope) values (3, 5)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 1)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 2)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (2, 3)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 4)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 5)
 go
 
 select * from auth.Scopes
@@ -132,6 +132,7 @@ select * from auth.Clients
 select * from auth.Codes
 select * from auth.Users
 select * from auth.UsersClients
+select * from auth.ClientsScopes
 
 
 --delete from auth.UsersClients

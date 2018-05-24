@@ -64,7 +64,8 @@ namespace DaOAuthCore.Service
                 return false;
             }
 
-            long.TryParse(GetValueFromClaim(user.Claims, "exp"), out expire);
+            if (!long.TryParse(GetValueFromClaim(user.Claims, "exp"), out expire))
+                return false;
 
             if (expire < DateTimeOffset.Now.ToUnixTimeSeconds() || GetValueFromClaim(user.Claims, "token_name") != token_name)
                 return false;

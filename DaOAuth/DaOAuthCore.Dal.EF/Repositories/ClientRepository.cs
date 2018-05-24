@@ -1,6 +1,7 @@
 ﻿using DaOAuthCore.Dal.Interface;
 using DaOAuthCore.Domain;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -20,7 +21,7 @@ namespace DaOAuthCore.Dal.EF
             return ((DaOAuthContext)Context).Clients.
                 Include(c => c.ClientsScopes).
                 ThenInclude(cs => cs.Scope).
-                Where(c => c.PublicId.Equals(publicId)).FirstOrDefault();
+                Where(c => c.PublicId.Equals(publicId, StringComparison.Ordinal)).FirstOrDefault();
         }
 
         public void Update(Client toUpdate)
@@ -35,7 +36,7 @@ namespace DaOAuthCore.Dal.EF
                 Include(uc => uc.Client).
                 Include(uc => uc.Client.ClientsScopes).
                 ThenInclude(cs => cs.Scope).
-                Where(c => c.User.UserName.Equals(userName)).Select(c => c.Client).Include("Scopes");
+                Where(c => c.User.UserName.Equals(userName, StringComparison.Ordinal)).Select(c => c.Client).Include("Scopes");
         }
     }
 }

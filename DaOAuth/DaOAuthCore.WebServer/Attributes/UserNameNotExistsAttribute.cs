@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DaOAuthCore.WebServer
 {
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public class UserNameNotExistsAttribute : ValidationAttribute
     {
         // https://andrewlock.net/injecting-services-into-validationattributes-in-asp-net-core/

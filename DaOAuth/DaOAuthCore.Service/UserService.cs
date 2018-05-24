@@ -16,7 +16,7 @@ namespace DaOAuthCore.Service
                     var userRepo = Factory.GetUserRepository(context);
 
                     var user = userRepo.GetByUserName(userName);
-                    if (user != null && this.AreEqualsSha1(
+                    if (user != null && AreEqualsSha1(
                         String.Concat(Configuration.PasswordSalt, password), user.Password))
                     {
                         toReturn = user.ToDto();
@@ -80,7 +80,7 @@ namespace DaOAuthCore.Service
                         CreationDate = DateTime.Now,
                         FullName = toCreate.FullName,
                         IsValid = true,
-                        Password = base.Sha1Hash(String.Concat(Configuration.PasswordSalt, password)),
+                        Password = Sha1Hash(String.Concat(Configuration.PasswordSalt, password)),
                         UserName = toCreate.UserName
                     };
 

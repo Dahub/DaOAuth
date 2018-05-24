@@ -11,9 +11,10 @@ using System;
 namespace DaOAuthCore.WebServer.Migrations
 {
     [DbContext(typeof(DaOAuthContext))]
-    partial class DaOAuthContextModelSnapshot : ModelSnapshot
+    [Migration("20180523130007_modif_structure_scopes")]
+    partial class modif_structure_scopes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

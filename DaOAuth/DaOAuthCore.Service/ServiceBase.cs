@@ -11,7 +11,7 @@ namespace DaOAuthCore.Service
         public IRepositoriesFactory Factory { get; set; }
         public string ConnexionString { get; set; }
 
-        protected bool AreEqualsSha1(string toCompare, byte[] hash)
+        protected static bool AreEqualsSha1(string toCompare, byte[] hash)
         {
             bool toReturn = false;
             using (SHA1Managed sha1 = new SHA1Managed())
@@ -22,7 +22,7 @@ namespace DaOAuthCore.Service
             return toReturn;
         }
 
-        protected byte[] Sha1Hash(string toHash)
+        protected static byte[] Sha1Hash(string toHash)
         {
             using (SHA1Managed sha1 = new SHA1Managed())
             {

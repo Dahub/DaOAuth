@@ -78,10 +78,8 @@ namespace DaOAuthCore.WebServer.Controllers
 
             // l'utilisateur a t'il authorisé le client ?
             string userName = ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value;
-
-            Guid userPublicId;
-
-            if (!_clientService.IsClientAuthorizeByUser(client_id, userName, out userPublicId))
+            
+            if (!_clientService.IsClientAuthorizeByUser(client_id, userName, out Guid userPublicId))
                 return Redirect(GenerateRedirectErrorMessage(redirect_uri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
 
             switch (response_type)
@@ -131,16 +129,13 @@ namespace DaOAuthCore.WebServer.Controllers
         [Route("/introspect")]
         public JsonResult Introspect([FromBody] IntrospectTokenModel model)
         {
-            JsonResult toReturnIfError;
-            if (!CheckAuthorizationHeader(out toReturnIfError))
+            if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
             if (String.IsNullOrEmpty(model.token))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "le token est obligatoire");
 
-            ClaimsPrincipal user;
-            long expire = 0;
-            if (!_jwtService.CheckIfTokenIsValid(model.token, ACCESS_TOKEN_NAME, out expire, out user))
+            if (!_jwtService.CheckIfTokenIsValid(model.token, ACCESS_TOKEN_NAME, out long expire, out ClaimsPrincipal user))
             {
                 return Json(new
                 {
@@ -168,10 +163,9 @@ namespace DaOAuthCore.WebServer.Controllers
         #region private        
 
         private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, string userName, string scope, Guid userPublicId)
-        {
-            string location = String.Empty;
+        {          
             var myToken = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, clientId, scope, userPublicId);
-            location = String.Concat(redirectUri, "?token=", myToken, "?token_type=bearer?expires_in", ACCESS_TOKEN_LIFETIME * 60);
+            string location = String.Concat(redirectUri, "?token=", myToken, "?token_type=bearer?expires_in", ACCESS_TOKEN_LIFETIME * 60);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
             return Redirect(new Uri(location).AbsoluteUri);
@@ -179,9 +173,8 @@ namespace DaOAuthCore.WebServer.Controllers
 
         private ActionResult RedirectForResponseTypeCode(string clientId, string state, string redirectUri, string userName, string scope, Guid userPublicId)
         {
-            string location = String.Empty;
             var myCode = _clientService.GenerateAndAddCodeToClient(clientId, userName, scope, userPublicId);
-            location = String.Concat(redirectUri, "?code=", myCode);
+            string location = String.Concat(redirectUri, "?code=", myCode);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
             return Redirect(new Uri(location).AbsoluteUri);
@@ -189,8 +182,7 @@ namespace DaOAuthCore.WebServer.Controllers
 
         private JsonResult GenerateTokenForClientCredentailsGrant(TokenModel model)
         {
-            JsonResult toReturnIfError;
-            if (!CheckAuthorizationHeader(out toReturnIfError))
+            if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
             var clientId = _clientService.GetClientIdFromAuthorizationHeaderValue(Request.Headers["Authorization"]);
@@ -208,18 +200,15 @@ namespace DaOAuthCore.WebServer.Controllers
 
         private JsonResult GenerateTokenForRefreshToken(TokenModel model)
         {
-            JsonResult toReturnIfError;
-            if (!CheckAuthorizationHeader(out toReturnIfError))
+            if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
             if (String.IsNullOrEmpty(model.refresh_token))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "refresh_token", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
 
             // analyse du refresh token
-            ClaimsPrincipal user;
-            long expire = 0;
-            if (!_jwtService.CheckIfTokenIsValid(model.refresh_token, REFRESH_TOKEN_NAME, out expire, out user))
-                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");         
+            if (!_jwtService.CheckIfTokenIsValid(model.refresh_token, REFRESH_TOKEN_NAME, out long expire, out ClaimsPrincipal user))
+                return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
 
             // on récupère les infos
             string scope = _jwtService.GetValueFromClaim(user.Claims, "scope");
@@ -242,8 +231,7 @@ namespace DaOAuthCore.WebServer.Controllers
 
         private JsonResult GenerateTokenForAuthorizationCodeGrant(TokenModel model)
         {
-            JsonResult toReturnIfError;
-            if (!CheckAuthorizationHeader(out toReturnIfError))
+            if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
             if (String.IsNullOrEmpty(model.code))
@@ -274,8 +262,7 @@ namespace DaOAuthCore.WebServer.Controllers
             alerts). */
             Thread.Sleep(50);
 
-            JsonResult toReturnIfError;
-            if (!CheckAuthorizationHeader(out toReturnIfError))
+            if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
             if (String.IsNullOrEmpty(model.username))
@@ -346,7 +333,7 @@ namespace DaOAuthCore.WebServer.Controllers
             return true;
         }
 
-        private string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, string stateInfo)
+        private static string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, string stateInfo)
         {
             if (String.IsNullOrEmpty(stateInfo))
                 return GenerateRedirectErrorMessage(redirectUri, errorName, errorDescription);            
@@ -355,7 +342,7 @@ namespace DaOAuthCore.WebServer.Controllers
             return uri.AbsoluteUri;
         }
 
-        private string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription)
+        private static string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription)
         {
             Uri uri = new Uri(String.Format("{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription));
             return uri.AbsoluteUri;
@@ -391,10 +378,9 @@ namespace DaOAuthCore.WebServer.Controllers
             return GenerateErrorResponse(statusCode, errorName, errorDescription, String.Empty);
         }
 
-        private bool IsUriCorrect(string uri)
+        private static bool IsUriCorrect(string uri)
         {
-            Uri u = null;
-            return Uri.TryCreate(uri, UriKind.Absolute, out u);
+            return Uri.TryCreate(uri, UriKind.Absolute, out Uri u);
         }
     }
 

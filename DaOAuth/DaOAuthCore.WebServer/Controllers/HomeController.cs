@@ -1,5 +1,4 @@
-﻿using DaOAuthCore.Service;
-using DaOAuthCore.WebServer.Models;
+﻿using DaOAuthCore.WebServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -7,11 +6,8 @@ namespace DaOAuthCore.WebServer.Controllers
 {
     public class HomeController : Controller
     {
-        private IUserClientService _clientService;
-
-        public HomeController([FromServices] IUserClientService cs)
+        public HomeController()
         {
-            _clientService = cs;
         }
 
         public ActionResult Index()

@@ -3,6 +3,7 @@ using DaOAuthCore.Domain;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace DaOAuthCore.Dal.EF
 {
@@ -17,7 +18,7 @@ namespace DaOAuthCore.Dal.EF
 
         public UserClient GetUserClientByUserNameAndClientPublicId(string clientPublicId, string userName)
         {
-            return ((DaOAuthContext)Context).UsersClients.Where(uc => uc.Client.PublicId.Equals(clientPublicId) && uc.User.UserName.Equals(userName, System.StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            return ((DaOAuthContext)Context).UsersClients.Where(uc => uc.Client.PublicId.Equals(clientPublicId, StringComparison.Ordinal) && uc.User.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
         }
 
         public void Delete(UserClient userClient)

@@ -1,6 +1,7 @@
 ﻿using DaOAuthCore.Domain;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -122,7 +123,7 @@ namespace DaOAuthCore.Service
                 {
                     var scopeRepo = Factory.GetScopeRepository(context);
 
-                    IEnumerable<string> clientScopes = scopeRepo.GetByClientPublicId(client_id).Select(s => s.Wording.ToUpper());
+                    IEnumerable<string> clientScopes = scopeRepo.GetByClientPublicId(client_id).Select(s => s.Wording.ToUpper(CultureInfo.CurrentCulture));
 
                     if ((scopes == null || scopes.Length == 0) && clientScopes.Count() == 0) // client sans scope défini
                         return true;
@@ -132,7 +133,7 @@ namespace DaOAuthCore.Service
 
                     foreach (var s in scopes)
                     {
-                        if (!clientScopes.Contains<string>(s.ToUpper()))
+                        if (!clientScopes.Contains<string>(s.ToUpper(CultureInfo.CurrentCulture)))
                             return false;
                     }
                 }
@@ -278,9 +279,7 @@ namespace DaOAuthCore.Service
                 if (String.IsNullOrEmpty(code))
                     return toReturn;
 
-                Code myCode;
-
-                if (!CheckIfCodeIsValid(clientPublicId, code, out myCode))
+                if (!CheckIfCodeIsValid(clientPublicId, code, out Code myCode))
                     return toReturn;
 
                 toReturn.IsValid = true;
@@ -395,8 +394,7 @@ namespace DaOAuthCore.Service
 
                 if (!String.IsNullOrEmpty(defaulRedirectUrl))
                 {
-                    Uri u;
-                    if (!Uri.TryCreate(defaulRedirectUrl, UriKind.Absolute, out u))
+                    if (!Uri.TryCreate(defaulRedirectUrl, UriKind.Absolute, out Uri u))
                         throw new DaOauthServiceException(String.Format("L'url de redirection {0} n'est pas valide", defaulRedirectUrl));
                 }
 

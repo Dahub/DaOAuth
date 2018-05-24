@@ -1,6 +1,7 @@
 ﻿using DaOAuthCore.Dal.Interface;
 using DaOAuthCore.Domain;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +25,7 @@ namespace DaOAuthCore.Dal.EF
         public IEnumerable<Code> GetAllByClientId(string clientPublicId)
         {
             return ((DaOAuthContext)Context).Codes.
-                Where(c => c.Client.PublicId.Equals(clientPublicId));
+                Where(c => c.Client.PublicId.Equals(clientPublicId, StringComparison.Ordinal));
         }
 
         public void Update(Code toUpdate)
