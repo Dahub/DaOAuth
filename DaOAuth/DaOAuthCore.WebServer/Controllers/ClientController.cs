@@ -12,11 +12,5 @@ namespace DaOAuthCore.WebServer.Controllers
         {
             _clientService = cs;
         }
-
-        [Authorize]
-        public IActionResult Create()
-        {
-            return View();
-        }
     }
 }

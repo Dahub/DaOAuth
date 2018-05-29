@@ -38,7 +38,7 @@ namespace DaOAuthCore.Service
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public bool CheckIfTokenIsValid(string token, string token_name, out long expire, out ClaimsPrincipal user)
+        public bool CheckIfTokenIsValid(string token, string tokenName, out long expire, out ClaimsPrincipal user)
         {
             expire = 0;
             user = null;
@@ -67,7 +67,7 @@ namespace DaOAuthCore.Service
             if (!long.TryParse(GetValueFromClaim(user.Claims, "exp"), out expire))
                 return false;
 
-            if (expire < DateTimeOffset.Now.ToUnixTimeSeconds() || GetValueFromClaim(user.Claims, "token_name") != token_name)
+            if (expire < DateTimeOffset.Now.ToUnixTimeSeconds() || GetValueFromClaim(user.Claims, "token_name") != tokenName)
                 return false;
 
             return true;

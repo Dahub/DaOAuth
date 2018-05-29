@@ -99,7 +99,7 @@ namespace DaOAuthCore.WebServer.Controllers
         {
             try
             {
-                if (String.IsNullOrEmpty(model.grant_type))
+                if (model == null || String.IsNullOrEmpty(model.grant_type))
                 {
                     return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre grant_type doit être présent une et une seule fois et avoir une valeur");
                 }

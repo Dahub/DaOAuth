@@ -79,7 +79,7 @@ create table auth.UsersClients
 	FK_Client integer not null foreign key references auth.Clients(Id),
 	CreationDate datetime not null,
 	UserPublicId uniqueidentifier not null unique,
-	RefreshToken nvarchar(512) null,
+	RefreshToken nvarchar(max) null,
 	IsValid bit not null
 )
 go
@@ -136,6 +136,9 @@ go
 
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 1)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 2)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 3)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 4)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 5)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (2, 3)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 4)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 5)
