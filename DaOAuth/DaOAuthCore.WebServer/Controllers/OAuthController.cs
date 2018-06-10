@@ -95,7 +95,7 @@ namespace DaOAuthCore.WebServer.Controllers
 
         [HttpPost]
         [Route("/token")]
-        public JsonResult Token([FromBody] TokenModel model)
+        public JsonResult Token([FromForm] TokenModel model)
         {
             try
             {
@@ -127,7 +127,7 @@ namespace DaOAuthCore.WebServer.Controllers
 
         [HttpPost]
         [Route("/introspect")]
-        public JsonResult Introspect([FromServices] IRessourceServerService rsService, [FromBody] IntrospectTokenModel model)
+        public JsonResult Introspect([FromServices] IRessourceServerService rsService, [FromForm] IntrospectTokenModel model)
         {
             if (!CheckAuthorizationHeaderForRessourceServer(rsService))
             {
