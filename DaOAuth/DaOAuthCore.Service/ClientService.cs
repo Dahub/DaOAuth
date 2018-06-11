@@ -480,9 +480,9 @@ namespace DaOAuthCore.Service
             return toReturn;
         }
 
-        public Guid GetUserPublicId(string client_id, string username)
+        public Guid? GetUserPublicId(string client_id, string username)
         {
-            Guid toReturn;
+            Guid? toReturn = null;
 
             try
             {
@@ -490,7 +490,9 @@ namespace DaOAuthCore.Service
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
                     var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(client_id, username);
-                    toReturn = clientUser.UserPublicId;
+
+                    if (clientUser != null)
+                        toReturn = clientUser.UserPublicId;
                 }
             }
             catch (DaOauthServiceException)

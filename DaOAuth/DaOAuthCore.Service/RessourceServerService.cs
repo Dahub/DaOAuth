@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Linq;
 
 namespace DaOAuthCore.Service
 {
@@ -40,6 +41,30 @@ namespace DaOAuthCore.Service
             }
 
             return toReturn;
+        }
+
+        public string[] GetAllRessourcesServersNames()
+        {
+            string[] result = Array.Empty<string>();
+
+            try
+            {
+                using (var context = Factory.CreateContext(ConnexionString))
+                {
+                    var rsRepo = Factory.GetRessourceServerRepository(context);
+                    result = rsRepo.GetAllActives().Select(rs => rs.Name).ToArray();
+                }
+            }
+            catch (DaOauthServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DaOauthServiceException("Erreur lors de la récupération des noms des serveurs de ressources", ex);
+            }
+
+            return result;
         }
     }
 }

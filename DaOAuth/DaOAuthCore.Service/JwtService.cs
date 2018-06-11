@@ -75,7 +75,7 @@ namespace DaOAuthCore.Service
 
         public string GetValueFromClaim(IEnumerable<Claim> claims, string claimType)
         {
-            var claim = claims.Where(c => c.Type.Equals(claimType)).FirstOrDefault();
+            var claim = claims.Where(c => c.Type.Equals(claimType, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 
             if (claim == null)
                 return String.Empty;

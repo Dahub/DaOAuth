@@ -1,6 +1,7 @@
 ﻿using DaOAuthCore.Dal.Interface;
 using DaOAuthCore.Domain;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DaOAuthCore.Dal.EF
@@ -12,7 +13,13 @@ namespace DaOAuthCore.Dal.EF
         public RessourceServer GetByLogin(string login)
         {
             return ((DaOAuthContext)Context).RessourceServers.
-               Where(c => c.Login.Equals(login, StringComparison.Ordinal)).FirstOrDefault();
+               Where(rs => rs.Login.Equals(login, StringComparison.Ordinal)).FirstOrDefault();
+        }
+
+        public IEnumerable<RessourceServer> GetAllActives()
+        {
+            return ((DaOAuthContext)Context).RessourceServers.
+                Where(rs => rs.IsValid.Equals(true));
         }
     }
 }

@@ -42,6 +42,7 @@ create table auth.RessourceServers
 	Id integer not null primary key identity(1,1),
 	Login nvarchar(256) not null unique,
 	ServerSecret varbinary(50) null,
+	IsValid bit not null,
 	Name nvarchar(256) not null,
 	Description nvarchar(max) null
 )
@@ -119,8 +120,8 @@ insert into auth.Clients (publicId, ClientSecret, Name, DefautRedirectUri, Creat
 values ('dEx5f12sPLEN5S09', HASHBYTES('SHA1', 'p-#d556cmzZSEDgvg'), 'DaGet Client', 'http://localhost:1234', getdate(), 1, 1, 'Client permettant d''utiliser l''API DaGet')
 go
 /* API Daget (ressource server) */
-insert into auth.RessourceServers(Login, ServerSecret, Name, Description)
-values ('_kZ2#412#Edcm-5f',  HASHBYTES('SHA1', 'og3Rkf--red###2'), 'API DaGet', 'Ressource server daget')
+insert into auth.RessourceServers(Login, ServerSecret, IsValid, Name, Description)
+values ('_kZ2#412#Edcm-5f',  HASHBYTES('SHA1', 'og3Rkf--red###2'), true, 'API DaGet', 'Ressource server daget')
 go
 
 insert into auth.Scopes(wording, NiceWording) values ('account:read:write', 'plop')

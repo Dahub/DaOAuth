@@ -153,15 +153,16 @@ namespace DaOAuthCore.WebServer.Controllers
             var clientId = _jwtService.GetValueFromClaim(user.Claims, "client_id");
             var userName = _jwtService.GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
             var userPublicId = _jwtService.GetValueFromClaim(user.Claims, "user_public_id");
-
+            string[] auds = rsService.GetAllRessourcesServersNames();
             return Json(new
             {
                 active = true,
+                exp = expire,
+                aud = auds,
                 client_id = clientId,
                 username = userName,
-                scope = scope,
-                exp = expire,
-                user_public_id = userPublicId
+                scope = scope,                
+                user_public_id = userPublicId                
             });
         }
 
@@ -285,9 +286,12 @@ namespace DaOAuthCore.WebServer.Controllers
             if (!_clientService.AreScopesAuthorizedForClient(model.client_id, model.scope))
                 return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_scope", "Scopes demandés invalides");
 
-            Guid userPublicId = _clientService.GetUserPublicId(model.client_id, model.username);
+            Guid? userPublicId = _clientService.GetUserPublicId(model.client_id, model.username);
 
-            return GenerateAccesTokenAndUpdateRefreshToken(model, model.username, model.scope, userPublicId);
+            if(!userPublicId.HasValue)
+                return GenerateErrorResponse(HttpStatusCode.Unauthorized, "unauthorized_client", "L'authentification du client a échoué");
+
+            return GenerateAccesTokenAndUpdateRefreshToken(model, model.username, model.scope, userPublicId.Value);
         }
 
         private JsonResult GenerateAccesTokenAndUpdateRefreshToken(TokenModel model, string userName, string scope, Guid userPublicId)

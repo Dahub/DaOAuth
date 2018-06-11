@@ -19,6 +19,6 @@ namespace DaOAuthCore.Service
         void UpdateRefreshTokenForClient(string refreshToken, string clientPublicId, string userName);
         ClientDto CreateNewClient(string name, string defaulRedirectUrl);
         string GenerateAndAddCodeToClient(string clientPublicId, string userName, string scope, Guid userPublicId);
-        Guid GetUserPublicId(string client_id, string username);       
+        Guid? GetUserPublicId(string client_id, string username);       
     }
 }
