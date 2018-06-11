@@ -151,7 +151,7 @@ namespace DaOAuthCore.WebServer.Controllers
             // on récupère les infos
             string scope = _jwtService.GetValueFromClaim(user.Claims, "scope");
             var clientId = _jwtService.GetValueFromClaim(user.Claims, "client_id");
-            var userName = _jwtService.GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
+            var name = _jwtService.GetValueFromClaim(user.Claims, ClaimTypes.NameIdentifier);
             var userPublicId = _jwtService.GetValueFromClaim(user.Claims, "user_public_id");
             string[] auds = rsService.GetAllRessourcesServersNames();
             return Json(new
@@ -160,7 +160,7 @@ namespace DaOAuthCore.WebServer.Controllers
                 exp = expire,
                 aud = auds,
                 client_id = clientId,
-                username = userName,
+                name = name,
                 scope = scope,                
                 user_public_id = userPublicId                
             });
