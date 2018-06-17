@@ -121,7 +121,7 @@ values ('dEx5f12sPLEN5S09', HASHBYTES('SHA1', 'p-#d556cmzZSEDgvg'), 'DaGet Clien
 go
 /* API Daget (ressource server) */
 insert into auth.RessourceServers(Login, ServerSecret, IsValid, Name, Description)
-values ('_kZ2#412#Edcm-5f',  HASHBYTES('SHA1', 'og3Rkf--red###2'), true, 'API DaGet', 'Ressource server daget')
+values ('_kZ2#412#Edcm-5f',  HASHBYTES('SHA1', 'og3Rkf--red###2'), 1, 'API DaGet', 'Ressource server daget')
 go
 
 insert into auth.Scopes(wording, NiceWording) values ('account:read:write', 'plop')
@@ -131,8 +131,10 @@ go
 insert into auth.Scopes(wording, NiceWording) values ('account:read', 'plap')
 go
 
-insert into auth.Scopes(wording, NiceWording) values ('daget:bankaccount:rw', 'Gestion des comptes (Lecture et écriture)')
-insert into auth.Scopes(wording, NiceWording) values ('daget:operation:rw', 'Saisir des opérations (Lecture et écriture)')
+insert into auth.Scopes(wording, NiceWording) values ('daget:bankaccount:write', 'Gestion des comptes (écriture)')
+insert into auth.Scopes(wording, NiceWording) values ('daget:bankaccount:read', 'Gestion des comptes (lecture)')
+insert into auth.Scopes(wording, NiceWording) values ('daget:operation:write', 'Saisir des opérations (écriture)')
+insert into auth.Scopes(wording, NiceWording) values ('daget:operation:read', 'Saisir des opérations (lecture)')
 go
 
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 1)
@@ -143,6 +145,8 @@ insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 5)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (2, 3)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 4)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 5)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 6)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 7)
 go
 
 select * from auth.Scopes
@@ -152,9 +156,3 @@ select * from auth.Users
 select * from auth.UsersClients
 select * from auth.ClientsScopes
 
-
---delete from auth.UsersClients
-
--- select HASHBYTES('SHA1', 'abc123456789')
-
--- 1K__-Az1mK15xxeyCzNxWDw3jU6QPMro2IBBUUF8YyAWSuvn2cAlYEmieGklaYxGjt89XqqhobiTawvmLQhSHN6WdamUIlc0Kr_cMRTIysQCH-lrLOKTbGPx87rCY6TCC3ymrBqN2aQZz53mm-WV2FZUBnTmWOWvAhxomMkK_qqfedxpDqHGHT2U-YUepGq0KKgDdusk4Jr0TwgEjXt8-IB1Nh5Yrtn1vb58Q04Y7rU

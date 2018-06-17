@@ -248,7 +248,8 @@ namespace DaOAuthCore.Service
                         var clientRepo = Factory.GetClientRepository(context);
                         var client = clientRepo.GetByPublicId(clientPublicId);
 
-                        return AreEqualsSha1(clientSecret, client.ClientSecret) && client.IsValid;
+                        if(client != null)
+                            toReturn = AreEqualsSha1(clientSecret, client.ClientSecret) && client.IsValid;
                     }
                 }
             }
