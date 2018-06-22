@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -33,63 +34,67 @@ namespace DaOAuthCore.WebServer.Controllers
 
         [AllowAnonymous]
         [Route("/authorize")]
-        public ActionResult Authorize(string response_type, string client_id, string state, string redirect_uri, string scope)
+        public ActionResult Authorize([FromQuery(Name = "response_type")] string responseType,
+            [FromQuery(Name = "client_id")] string clientId,
+            [FromQuery(Name = "state")] string state,
+            [FromQuery(Name = "redirect_uri")] string redirectUri,
+            [FromQuery(Name = "scope")] string scope)
         {
-            if (String.IsNullOrEmpty(redirect_uri))
+            if (String.IsNullOrEmpty(redirectUri))
                 return StatusCode((int)HttpStatusCode.BadRequest, "le paramètre redirect_uri doit être renseigné");
 
-            if (!IsUriCorrect(redirect_uri))
+            if (!IsUriCorrect(redirectUri))
                 return StatusCode((int)HttpStatusCode.BadRequest, "l'url de redirection est incorrecte");
 
-            if (String.IsNullOrEmpty(response_type))
-                return Redirect( GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre response_type est requis", state));
+            if (String.IsNullOrEmpty(responseType))
+                return Redirect( GenerateRedirectErrorMessage(redirectUri, "invalid_request", "Le paramètre response_type est requis", state));
 
-            if (String.IsNullOrEmpty(client_id))
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_request", "Le paramètre client_id est requis", state));
+            if (String.IsNullOrEmpty(clientId))
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_request", "Le paramètre client_id est requis", state));
 
-            if (!_clientService.IsClientValidForAuthorization(client_id, redirect_uri, response_type))
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
+            if (!_clientService.IsClientValidForAuthorization(clientId, new Uri(redirectUri, UriKind.Absolute) , responseType))
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
 
             // vérification des scopes proposés
-            if (!_clientService.AreScopesAuthorizedForClient(client_id, scope))
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "invalid_scope", "Scopes demandés invalides"));
+            if (!_clientService.AreScopesAuthorizedForClient(clientId, scope))
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_scope", "Scopes demandés invalides"));
 
             // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
             if (!User.Identity.IsAuthenticated)
                 return RedirectToAction("LoginAuthorize", "User", new
                 {
-                    response_type = response_type,
-                    client_id = client_id,
+                    response_type = responseType,
+                    client_id = clientId,
                     state = state,
-                    redirect_uri = redirect_uri,
+                    redirect_uri = redirectUri,
                     scope = scope
                 });
 
             // vérifier que l'utilisateur a bien connaissance du client, sinon, prompt d'autorisation
-            if (!_clientService.HasUserAuthorizeOrDeniedClientAccess(client_id, ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (!_clientService.HasUserAuthorizeOrDeniedClientAccess(clientId, ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value))
                 return RedirectToAction("AuthorizeClient", "User", new
                 {
-                    response_type = response_type,
-                    client_id = client_id,
+                    response_type = responseType,
+                    client_id = clientId,
                     state = state,
-                    redirect_uri = redirect_uri,
+                    redirect_uri = redirectUri,
                     scope = scope
                 });
 
             // l'utilisateur a t'il authorisé le client ?
             string userName = ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value;
             
-            if (!_clientService.IsClientAuthorizeByUser(client_id, userName, out Guid userPublicId))
-                return Redirect(GenerateRedirectErrorMessage(redirect_uri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
+            if (!_clientService.IsClientAuthorizeByUser(clientId, userName, out Guid userPublicId))
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
 
-            switch (response_type)
+            switch (responseType)
             {
                 case "code":
-                    return RedirectForResponseTypeCode(client_id, state, redirect_uri, userName, scope, userPublicId);
+                    return RedirectForResponseTypeCode(clientId, state, redirectUri, userName, scope, userPublicId);
                 case "token": // implicit grant pour spa applications
-                    return RedirectForResponseTypeToken(client_id, state, redirect_uri, userName, scope, userPublicId);
+                    return RedirectForResponseTypeToken(clientId, state, redirectUri, userName, scope, userPublicId);
                 default:
-                    return Redirect(GenerateRedirectErrorMessage(redirect_uri, "unsupported_response_type", "La valeur du paramètre response_type doit être code", state));
+                    return Redirect(GenerateRedirectErrorMessage(redirectUri, "unsupported_response_type", "La valeur du paramètre response_type doit être code", state));
             }
         }
 
@@ -99,12 +104,12 @@ namespace DaOAuthCore.WebServer.Controllers
         {
             try
             {
-                if (model == null || String.IsNullOrEmpty(model.grant_type))
+                if (model == null || String.IsNullOrEmpty(model.GrantType))
                 {
                     return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre grant_type doit être présent une et une seule fois et avoir une valeur");
                 }
 
-                switch (model.grant_type)
+                switch (model.GrantType)
                 {
                     case "authorization_code":
                         return GenerateTokenForAuthorizationCodeGrant(model);
@@ -193,12 +198,12 @@ namespace DaOAuthCore.WebServer.Controllers
 
             var clientId = _clientService.GetClientIdFromAuthorizationHeaderValue(Request.Headers["Authorization"]);
 
-            if (!_clientService.AreScopesAuthorizedForClient(model.client_id, model.scope))
+            if (!_clientService.AreScopesAuthorizedForClient(model.ClientId, model.Scope))
                 return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_scope", "Scopes demandés invalides");
 
             return Json(new
             {
-                access_token = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, clientId, model.scope, null),
+                access_token = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, clientId, model.Scope, null),
                 token_type = "bearer",
                 expires_in = ACCESS_TOKEN_LIFETIME * 60
             });
@@ -209,11 +214,11 @@ namespace DaOAuthCore.WebServer.Controllers
             if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
-            if (String.IsNullOrEmpty(model.refresh_token))
-                return GenerateErrorResponse(HttpStatusCode.BadRequest, "refresh_token", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
+            if (String.IsNullOrEmpty(model.RefreshToken))
+                return GenerateErrorResponse(HttpStatusCode.BadRequest, "refresh_token", "Le paramètre refresh_token doit être présent une et une seule fois et avoir une valeur");
 
             // analyse du refresh token
-            if (!_jwtService.CheckIfTokenIsValid(model.refresh_token, REFRESH_TOKEN_NAME, out long expire, out ClaimsPrincipal user))
+            if (!_jwtService.CheckIfTokenIsValid(model.RefreshToken, REFRESH_TOKEN_NAME, out long expire, out ClaimsPrincipal user))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
 
             // on récupère les infos
@@ -223,13 +228,13 @@ namespace DaOAuthCore.WebServer.Controllers
             Guid userPublicId = Guid.Parse(_jwtService.GetValueFromClaim(user.Claims, "user_public_id"));
 
             // vérifier que le token n'ai pas été révoqué
-            if (!_clientService.IsRefreshTokenValid(userName, clientId, model.refresh_token))
+            if (!_clientService.IsRefreshTokenValid(userName, clientId, model.RefreshToken))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "Le refresh token est invalide");
 
             // générer un nouveau token (et refresh token à mettre à jour)
-            model.client_id = clientId;
+            model.ClientId = clientId;
 
-            if (!_clientService.AreScopesAuthorizedForClient(model.client_id, scope))
+            if (!_clientService.AreScopesAuthorizedForClient(model.ClientId, scope))
                 return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_scope", "Scopes demandés invalides");
 
             return GenerateAccesTokenAndUpdateRefreshToken(model, userName, scope, userPublicId);
@@ -240,19 +245,19 @@ namespace DaOAuthCore.WebServer.Controllers
             if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
-            if (String.IsNullOrEmpty(model.code))
+            if (String.IsNullOrEmpty(model.Code))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre code doit être présent une et une seule fois et avoir une valeur");
 
-            if (String.IsNullOrEmpty(model.redirect_uri))
+            if (model.RedirectUrl == null)
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre redirect_uri doit être présent une et une seule fois et avoir une valeur");
 
-            if (String.IsNullOrEmpty(model.client_id))
+            if (String.IsNullOrEmpty(model.ClientId))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre client_id doit être présent une et une seule fois et avoir une valeur");
 
-            if (!_clientService.IsClientValidForAuthorization(model.client_id, model.redirect_uri, "code"))
+            if (!_clientService.IsClientValidForAuthorization(model.ClientId, model.RedirectUrl, "code"))
                 return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_client", "client non valide");
 
-            CodeDto codeInfos = _clientService.GetCodeInfos(model.client_id, model.code);
+            CodeDto codeInfos = _clientService.GetCodeInfos(model.ClientId, model.Code);
 
             if (!codeInfos.IsValid)
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "code incorrect");
@@ -271,37 +276,37 @@ namespace DaOAuthCore.WebServer.Controllers
             if (!CheckAuthorizationHeader(out JsonResult toReturnIfError))
                 return toReturnIfError;
 
-            if (String.IsNullOrEmpty(model.username))
+            if (String.IsNullOrEmpty(model.Username))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre username doit être présent une et une seule fois et avoir une valeur");
 
-            if (String.IsNullOrEmpty(model.password))
+            if (String.IsNullOrEmpty(model.Password))
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_request", "Le paramètre password doit être présent une et une seule fois et avoir une valeur");
 
             // vérification de la validé des identifiants          
-            if (_userService.Find(model.username, model.password) == null)
+            if (_userService.Find(model.Username, model.Password) == null)
                 return GenerateErrorResponse(HttpStatusCode.BadRequest, "invalid_grant", "username ou password incorrect");
 
-            model.client_id = _clientService.GetClientIdFromAuthorizationHeaderValue(Request.Headers["Authorization"]);
+            model.ClientId = _clientService.GetClientIdFromAuthorizationHeaderValue(Request.Headers["Authorization"]);
 
-            if (!_clientService.AreScopesAuthorizedForClient(model.client_id, model.scope))
+            if (!_clientService.AreScopesAuthorizedForClient(model.ClientId, model.Scope))
                 return GenerateErrorResponse(HttpStatusCode.Unauthorized, "invalid_scope", "Scopes demandés invalides");
 
-            Guid? userPublicId = _clientService.GetUserPublicId(model.client_id, model.username);
+            Guid? userPublicId = _clientService.GetUserPublicId(model.ClientId, model.Username);
 
             if(!userPublicId.HasValue)
                 return GenerateErrorResponse(HttpStatusCode.Unauthorized, "unauthorized_client", "L'authentification du client a échoué");
 
-            return GenerateAccesTokenAndUpdateRefreshToken(model, model.username, model.scope, userPublicId.Value);
+            return GenerateAccesTokenAndUpdateRefreshToken(model, model.Username, model.Scope, userPublicId.Value);
         }
 
         private JsonResult GenerateAccesTokenAndUpdateRefreshToken(TokenModel model, string userName, string scope, Guid userPublicId)
         {
-            string refreshToken = _jwtService.GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.client_id, scope, userPublicId);
-            _clientService.UpdateRefreshTokenForClient(refreshToken, model.client_id, userName);
+            string refreshToken = _jwtService.GenerateToken(REFRESH_TOKEN_LIFETIME, REFRESH_TOKEN_NAME, userName, model.ClientId, scope, userPublicId);
+            _clientService.UpdateRefreshTokenForClient(refreshToken, model.ClientId, userName);
 
             return Json(new
             {
-                access_token = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.client_id, scope, userPublicId),
+                access_token = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, model.ClientId, scope, userPublicId),
                 token_type = "bearer",
                 expires_in = ACCESS_TOKEN_LIFETIME * 60, // en secondes
                 refresh_token = refreshToken,
@@ -363,13 +368,13 @@ namespace DaOAuthCore.WebServer.Controllers
             if (String.IsNullOrEmpty(stateInfo))
                 return GenerateRedirectErrorMessage(redirectUri, errorName, errorDescription);            
 
-            Uri uri = new Uri(String.Format("{0}?error={1}&error_description={2}&state={3}", redirectUri, errorName, errorDescription, stateInfo));
+            Uri uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}?error={1}&error_description={2}&state={3}", redirectUri, errorName, errorDescription, stateInfo));
             return uri.AbsoluteUri;
         }
 
         private static string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription)
         {
-            Uri uri = new Uri(String.Format("{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription));
+            Uri uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription));
             return uri.AbsoluteUri;
         }
 

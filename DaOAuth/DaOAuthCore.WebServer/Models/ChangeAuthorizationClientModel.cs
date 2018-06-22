@@ -1,8 +1,11 @@
-﻿namespace DaOAuthCore.WebServer.Models
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace DaOAuthCore.WebServer.Models
 {
+    [ModelBinder(BinderType = typeof(Models.Binders.ChangeAuthorizationClientModelBinder), Name = "ChangeAuthorizationClientModel")]
     public class ChangeAuthorizationClientModel
     {
-        public string client_id { get; set; }
-        public bool authorize { get; set; }
+        public string ClientId { get; set; }
+        public bool Authorize { get; set; }
     }
 }

@@ -1,14 +1,18 @@
-﻿namespace DaOAuthCore.WebServer.Models
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
+
+namespace DaOAuthCore.WebServer.Models
 {
+    [ModelBinder(BinderType = typeof(Models.Binders.TokenModelBinder), Name = "TokenModel")]
     public class TokenModel
-    {
-        public string grant_type { get; set; }
-        public string code { get; set; }
-        public string redirect_uri { get; set; }
-        public string client_id { get; set; }
-        public string refresh_token { get; set; }
-        public string password { get; set; }
-        public string username { get; set; }
-        public string scope { get; set; }
+    {       
+        public string GrantType { get; set; }
+        public string Code { get; set; }
+        public Uri RedirectUrl { get; set; }
+        public string ClientId { get; set; }
+        public string RefreshToken { get; set; }
+        public string Password { get; set; }
+        public string Username { get; set; }
+        public string Scope { get; set; }
     }
 }

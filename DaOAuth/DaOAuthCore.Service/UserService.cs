@@ -1,5 +1,6 @@
 ﻿using DaOAuthCore.Domain;
 using System;
+using System.Globalization;
 
 namespace DaOAuthCore.Service
 {
@@ -29,7 +30,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la récupération de l'utilisateur {0}", userName), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la récupération de l'utilisateur {0}", userName), ex);
             }
 
             return toReturn;
@@ -53,7 +54,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'existance de l'utilisateur {0}", userName), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la vérification de l'existance de l'utilisateur {0}", userName), ex);
             }
 
             return toReturn;
@@ -71,7 +72,7 @@ namespace DaOAuthCore.Service
                 {
                     var userRepo = Factory.GetUserRepository(context);
                     if (userRepo.GetByUserName(toCreate.UserName) != null)
-                        throw new DaOauthServiceException(String.Format("Le nom d'utilisateur {0} est déjà utilisé", toCreate.UserName));
+                        throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Le nom d'utilisateur {0} est déjà utilisé", toCreate.UserName));
 
                     // initialisation de l'utilisateur
                     User myUser = new User()
@@ -97,7 +98,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la création d'un nouvel utilisateur {0}", toCreate.UserName), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la création d'un nouvel utilisateur {0}", toCreate.UserName), ex);
             }
 
             return toCreate;

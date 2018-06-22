@@ -2,7 +2,6 @@
 using DaOAuthCore.WebServer.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using System.Security.Claims;
 
 namespace DaOAuthCore.WebServer.Controllers
@@ -25,16 +24,21 @@ namespace DaOAuthCore.WebServer.Controllers
 
         [Authorize]
         [HttpPost]
-        public void RevokeClient(RevokeClientModel model)
+        public ActionResult RevokeClient(RevokeClientModel model)
         {
-            _clientService.RevokeClient(model.client_id, ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (!ModelState.IsValid)
+                return BadRequest(model);
+
+             _clientService.RevokeClient(model.ClientId, ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value);
+            
+            return Ok();
         }
 
         [Authorize]
         [HttpPost]
         public void ChangeAuthorizationClient(ChangeAuthorizationClientModel model)
         {
-            _clientService.ChangeAuthorizationClient(model.client_id, model.authorize, ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value);
+            _clientService.ChangeAuthorizationClient(model.ClientId, model.Authorize, ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value);
         }
     }
 }

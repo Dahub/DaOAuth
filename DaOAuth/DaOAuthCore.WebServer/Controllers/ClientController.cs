@@ -1,5 +1,4 @@
 ﻿using DaOAuthCore.Service;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DaOAuthCore.WebServer.Controllers

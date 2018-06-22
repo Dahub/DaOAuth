@@ -22,15 +22,19 @@ namespace DaOAuthCore.WebServer.Controllers
 
         [Authorize]
         [HttpGet]
-        public ActionResult AuthorizeClient(string response_type, string client_id, string state, string redirect_uri, string scope)
+        public ActionResult AuthorizeClient([FromQuery(Name = "response_type")] string responseType,
+            [FromQuery(Name = "client_id")] string clientId,
+            [FromQuery(Name = "state")] string state,
+            [FromQuery(Name = "redirect_uri")] Uri redirectUri,
+            [FromQuery(Name = "scope")] string scope)
         {        
             return View(new AuthorizeClientViewModel()
             {
-                ClientId = client_id,
-                RedirectUrl = redirect_uri,
-                ResponseType = response_type,
+                ClientId = clientId,
+                RedirectUrl = redirectUri.AbsoluteUri,
+                ResponseType = responseType,
                 State = state,
-                ClientName = _clientService.GetClientByPublicId(client_id).Name,
+                ClientName = _clientService.GetClientByPublicId(clientId).Name,
                 IsValid = true,
                 Scope = scope
             });
@@ -54,13 +58,17 @@ namespace DaOAuthCore.WebServer.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public ActionResult LoginAuthorize(string response_type, string client_id, string state, string redirect_uri, string scope)
+        public ActionResult LoginAuthorize([FromQuery(Name = "response_type")] string responseType,
+            [FromQuery(Name = "client_id")] string clientId,
+            [FromQuery(Name = "state")] string state,
+            [FromQuery(Name = "redirect_uri")] Uri redirectUri,
+            [FromQuery(Name = "scope")] string scope)
         {
             return View(new LoginAuthorizeViewModel()
             {
-                ClientId = client_id,
-                RedirectUrl = redirect_uri,
-                ResponseType = response_type,
+                ClientId = clientId,
+                RedirectUrl = redirectUri.AbsoluteUri,
+                ResponseType = responseType,
                 State = state,
                 Scope = scope
             });

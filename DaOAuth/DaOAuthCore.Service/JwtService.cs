@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Linq;
+using System.Globalization;
 
 namespace DaOAuthCore.Service
 {
@@ -20,7 +21,7 @@ namespace DaOAuthCore.Service
             IList<Claim> claims = new List<Claim>();
             claims.Add(new Claim("client_id", clientId));
             claims.Add(new Claim("token_name", tokenName));
-            claims.Add(new Claim("issued", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()));
+            claims.Add(new Claim("issued", DateTimeOffset.Now.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
             claims.Add(new Claim("user_public_id", userPublicId.HasValue ? userPublicId.Value.ToString() : String.Empty));
             claims.Add(new Claim(ClaimTypes.NameIdentifier, !String.IsNullOrEmpty(userName) ? userName : String.Empty));
             claims.Add(new Claim("scope", !String.IsNullOrEmpty(scope) ? scope : String.Empty));

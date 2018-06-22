@@ -27,7 +27,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la récupération des clients de l'utilisateur {0}", userName), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la récupération des clients de l'utilisateur {0}", userName), ex);
             }
 
             return toReturn;
@@ -44,7 +44,7 @@ namespace DaOAuthCore.Service
                     var clientRepo = Factory.GetClientRepository(context);
                     var client = clientRepo.GetByPublicId(publicId);
                     if (client == null || !client.IsValid)
-                        throw new DaOauthServiceException(String.Format("Client {0} introuvable ou invalide", publicId));
+                        throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Client {0} introuvable ou invalide", publicId));
 
                     toReturn = client.ToDto();
                 }
@@ -55,7 +55,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la récupération du client {0}", publicId), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la récupération du client {0}", publicId), ex);
             }
 
             return toReturn;
@@ -79,7 +79,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la vérification de l'autorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
             }
 
             return toReturn;
@@ -105,13 +105,13 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la vérification de l'autorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
             }
 
             return toReturn;
         }
 
-        public bool AreScopesAuthorizedForClient(string client_id, string scope)
+        public bool AreScopesAuthorizedForClient(string clientId, string scope)
         {
             try
             {
@@ -123,7 +123,7 @@ namespace DaOAuthCore.Service
                 {
                     var scopeRepo = Factory.GetScopeRepository(context);
 
-                    IEnumerable<string> clientScopes = scopeRepo.GetByClientPublicId(client_id).Select(s => s.Wording.ToUpper(CultureInfo.CurrentCulture));
+                    IEnumerable<string> clientScopes = scopeRepo.GetByClientPublicId(clientId).Select(s => s.Wording.ToUpper(CultureInfo.CurrentCulture));
 
                     if ((scopes == null || scopes.Length == 0) && clientScopes.Count() == 0) // client sans scope défini
                         return true;
@@ -146,7 +146,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la vérification de l'autorisation des scopes du client {0}", client_id), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la vérification de l'autorisation des scopes du client {0}", clientId), ex);
             }
         }
 
@@ -166,11 +166,11 @@ namespace DaOAuthCore.Service
 
                     var client = clientRepo.GetByPublicId(publicId);
                     if (client == null || !client.IsValid)
-                        throw new DaOauthServiceException(String.Format("Client {0} introuvable ou invalide", publicId));
+                        throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Client {0} introuvable ou invalide", publicId));
 
                     var user = userRepo.GetByUserName(userName);
                     if (user == null || !user.IsValid)
-                        throw new DaOauthServiceException(String.Format("Utilisateur {0} introuvable ou invalide", userName));
+                        throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Utilisateur {0} introuvable ou invalide", userName));
 
                     clientUserRepo.Add(new UserClient()
                     {
@@ -190,7 +190,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de l'authorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de l'authorisation de l'utilisateur {0} avec le client {1}", userName, publicId), ex);
             }
         }
 
@@ -300,14 +300,14 @@ namespace DaOAuthCore.Service
             }
         }
 
-        public bool IsClientValidForAuthorization(string clientPublicId, string requestRedirectUri, string responseType)
+        public bool IsClientValidForAuthorization(string clientPublicId, Uri requestRedirectUri, string responseType)
         {
             try
             {
                 if (String.IsNullOrEmpty(clientPublicId))
                     return false;
 
-                if (String.IsNullOrEmpty(requestRedirectUri))
+                if (requestRedirectUri == null)
                     return false;
 
                 switch (responseType)
@@ -321,7 +321,7 @@ namespace DaOAuthCore.Service
                             return false;
                         break;
                     default:
-                        throw new DaOauthServiceException(String.Format("response_type non pris en charge : {0}", responseType));
+                        throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "response_type non pris en charge : {0}", responseType));
                 }
 
                 return true;
@@ -332,11 +332,11 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la tentative de vérification de validité du client {0}", clientPublicId), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la tentative de vérification de validité du client {0}", clientPublicId), ex);
             }
         }
 
-        public bool IsRefreshTokenValid(string userName, string clientPublicId, string refresh_token)
+        public bool IsRefreshTokenValid(string userName, string clientPublicId, string refreshToken)
         {
             try
             {
@@ -345,7 +345,10 @@ namespace DaOAuthCore.Service
                     var clientUserRepo = Factory.GetUserClientRepository(context);
                     var client = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientPublicId, userName);
 
-                    return client.RefreshToken.Equals(refresh_token);
+                    if (client == null || !client.IsValid)
+                        return false;
+
+                    return client.RefreshToken != null && client.RefreshToken.Equals(refreshToken, StringComparison.Ordinal);
                 }
             }
             catch (DaOauthServiceException)
@@ -380,7 +383,7 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la mise à jour du refresh token du client {0}", clientPublicId), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la mise à jour du refresh token du client {0}", clientPublicId), ex);
             }
         }
 
@@ -396,7 +399,7 @@ namespace DaOAuthCore.Service
                 if (!String.IsNullOrEmpty(defaulRedirectUrl))
                 {
                     if (!Uri.TryCreate(defaulRedirectUrl, UriKind.Absolute, out Uri u))
-                        throw new DaOauthServiceException(String.Format("L'url de redirection {0} n'est pas valide", defaulRedirectUrl));
+                        throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "L'url de redirection {0} n'est pas valide", defaulRedirectUrl));
                 }
 
                 result = new Client()
@@ -439,7 +442,7 @@ namespace DaOAuthCore.Service
                     var clientRepo = Factory.GetClientRepository(context);
                     Client myClient = clientRepo.GetByPublicId(clientPublicId);
                     if (myClient == null || !myClient.IsValid)
-                        throw new DaOauthServiceException(String.Format("Client {0} invalide", clientPublicId));
+                        throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Client {0} invalide", clientPublicId));
 
                     var codeRepo = Factory.GetCodeRepository(context);
 
@@ -475,13 +478,13 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la création d'un nouveau code pour le client {0}", clientPublicId), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la création d'un nouveau code pour le client {0}", clientPublicId), ex);
             }
 
             return toReturn;
         }
 
-        public Guid? GetUserPublicId(string client_id, string username)
+        public Guid? GetUserPublicId(string clientId, string username)
         {
             Guid? toReturn = null;
 
@@ -490,7 +493,7 @@ namespace DaOAuthCore.Service
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
-                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(client_id, username);
+                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientId, username);
 
                     if (clientUser != null)
                         toReturn = clientUser.UserPublicId;
@@ -520,7 +523,7 @@ namespace DaOAuthCore.Service
                 if (codes == null || codes.Count() == 0)
                     return false;
 
-                myCode = codes.Where(c => c.CodeValue.Equals(code)).FirstOrDefault();
+                myCode = codes.Where(c => c.CodeValue.Equals(code, StringComparison.Ordinal)).FirstOrDefault();
                 if (myCode == null)
                     return false;
 
@@ -541,7 +544,7 @@ namespace DaOAuthCore.Service
             return true;
         }
 
-        private bool CheckIfClientIsValid(string clientPublicId, string requestRedirectUri, EClientType clientType)
+        private bool CheckIfClientIsValid(string clientPublicId, Uri requestRedirectUri, EClientType clientType)
         {
             using (var context = Factory.CreateContext(ConnexionString))
             {
@@ -557,7 +560,9 @@ namespace DaOAuthCore.Service
                 if (client.ClientTypeId != (int)clientType)
                     return false;
 
-                if (client.DefautRedirectUri != requestRedirectUri)
+                Uri clientUri = new Uri(client.DefautRedirectUri, UriKind.Absolute);
+
+                if (!clientUri.Equals(requestRedirectUri))
                     return false;
             }
 

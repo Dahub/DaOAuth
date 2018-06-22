@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace DaOAuthCore.Service
 {
@@ -23,20 +24,20 @@ namespace DaOAuthCore.Service
             }
             catch (Exception ex)
             {
-                throw new DaOauthServiceException(String.Format("Erreur lors de la récupération des clients de l'utilisateur {0}", userName), ex);
+                throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "Erreur lors de la récupération des clients de l'utilisateur {0}", userName), ex);
             }
 
             return toReturn;
         }
 
-        public void RevokeClient(string client_id, string username)
+        public void RevokeClient(string clientId, string username)
         {
             try
             {
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
-                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(client_id, username);
+                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientId, username);
                     if (clientUser != null)
                     {
                         clientUserRepo.Delete(clientUser);
@@ -54,14 +55,14 @@ namespace DaOAuthCore.Service
             }
         }
 
-        public void ChangeAuthorizationClient(string client_id, bool authorize, string username)
+        public void ChangeAuthorizationClient(string clientId, bool authorize, string username)
         {
             try
             {
                 using (var context = Factory.CreateContext(ConnexionString))
                 {
                     var clientUserRepo = Factory.GetUserClientRepository(context);
-                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(client_id, username);
+                    var clientUser = clientUserRepo.GetUserClientByUserNameAndClientPublicId(clientId, username);
                     if (clientUser != null)
                     {
                         clientUser.IsValid = authorize;

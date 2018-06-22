@@ -11,7 +11,7 @@ namespace DaOAuthCore.Service
 
         internal static int GenerateRandomInt(int digits)
         {
-            return Int32.Parse(GenerateRandom(digits, validInt));         
+            return Int32.Parse(GenerateRandom(digits, validInt), NumberFormatInfo.InvariantInfo);         
         }
 
         internal static string GenerateRandomString(int stringLenght)
