@@ -130,6 +130,7 @@ values ('dEx5f12sPLEN5S09', null, 'DaGet Client', getdate(), 1, 1, 'Client perme
 go
 
 insert into auth.ClientReturnUrls(ReturnUrl, FK_Client) values ('http://localhost:1234', 3)
+insert into auth.ClientReturnUrls(ReturnUrl, FK_Client) values ('http://localhost:4200/cb', 3)
 
 /* API Daget (ressource server) */
 insert into auth.RessourceServers(Login, ServerSecret, IsValid, Name, Description)
