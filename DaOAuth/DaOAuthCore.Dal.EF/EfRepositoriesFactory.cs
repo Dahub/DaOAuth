@@ -60,5 +60,13 @@ namespace DaOAuthCore.Dal.EF
                 Context = context
             };
         }
+
+        public IClientReturnUrlRepository GetClientReturnUrlRepository(IContext context)
+        {
+            return new ClientReturnUrlRepository()
+            {
+                Context = context
+            };
+        }
     }
 }

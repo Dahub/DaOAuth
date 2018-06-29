@@ -17,10 +17,17 @@ namespace DaOAuthCore.Dal.EF
         public DbSet<Scope> Scopes { get; set; }
         public DbSet<ClientScope> ClientsScopes { get; set; }
         public DbSet<RessourceServer> RessourceServers { get; set; }
+        public DbSet<ClientReturnUrl> ClientReturnUrl { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("auth");
+
+            modelBuilder.Entity<ClientReturnUrl>().ToTable("ClientReturnUrls");
+            modelBuilder.Entity<ClientReturnUrl>().HasKey(rs => rs.Id);
+            modelBuilder.Entity<ClientReturnUrl>().Property(p => p.ReturnUrl).HasColumnName("ReturnUrl").HasColumnType("nvarchar(max)").IsRequired();
+            modelBuilder.Entity<ClientReturnUrl>().Property(p => p.ClientId).HasColumnName("FK_Client").HasColumnType("int").IsRequired();
+            modelBuilder.Entity<ClientReturnUrl>().HasOne<Client>(c => c.Client).WithMany(g => g.ClientReturnUrls).HasForeignKey(c => c.ClientId);
 
             modelBuilder.Entity<RessourceServer>().ToTable("RessourceServers");
             modelBuilder.Entity<RessourceServer>().HasKey(rs => rs.Id);
@@ -50,7 +57,6 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<Client>().HasKey(c => c.Id);
             modelBuilder.Entity<Client>().Property(p => p.Id).HasColumnName("Id").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.CreationDate).HasColumnName("CreationDate").HasColumnType("datetime2").IsRequired();
-            modelBuilder.Entity<Client>().Property(p => p.DefautRedirectUri).HasColumnName("DefautRedirectUri").HasColumnType("nvarchar(max)").IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.Description).HasColumnName("Description").HasColumnType("nvarchar(max)");
             modelBuilder.Entity<Client>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
             modelBuilder.Entity<Client>().Property(p => p.Name).HasColumnName("Name").HasColumnType("nvarchar(256)").HasMaxLength(256).IsRequired();
@@ -60,6 +66,7 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<Client>().HasMany<ClientScope>(c => c.ClientsScopes).WithOne(c => c.Client).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Client>().Property(p => p.ClientTypeId).HasColumnName("FK_ClientType").HasColumnType("int").IsRequired();
             modelBuilder.Entity<Client>().HasOne<ClientType>(c => c.ClientType).WithMany(ct => ct.Clients).HasForeignKey(ct => ct.ClientTypeId);
+            modelBuilder.Entity<Client>().HasMany<ClientReturnUrl>(c => c.ClientReturnUrls).WithOne(c => c.Client).OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Scope>().ToTable("Scopes");
             modelBuilder.Entity<Scope>().HasKey(s => s.Id);

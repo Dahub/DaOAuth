@@ -10,7 +10,6 @@ namespace DaOAuthCore.Domain
         public byte[] ClientSecret { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string DefautRedirectUri { get; set; }
         public DateTime CreationDate { get; set; }
         public bool IsValid { get; set; }
         public ICollection<Code> Codes { get; set; }
@@ -18,5 +17,6 @@ namespace DaOAuthCore.Domain
         public ClientType ClientType { get; set; }
         public ICollection<UserClient> UsersClients { get; set; }
         public ICollection<ClientScope> ClientsScopes { get; set; }
+        public ICollection<ClientReturnUrl> ClientReturnUrls { get; set; }
     }
 }

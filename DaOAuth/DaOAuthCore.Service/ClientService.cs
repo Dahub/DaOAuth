@@ -406,8 +406,7 @@ namespace DaOAuthCore.Service
                 {
                     IsValid = true,
                     CreationDate = DateTime.Now,
-                    Name = name,
-                    DefautRedirectUri = defaulRedirectUrl,
+                    Name = name,                    
                     PublicId = RandomMaker.GenerateRandomString(16)
                 };
 
@@ -415,7 +414,15 @@ namespace DaOAuthCore.Service
                 {
                     var clientRepo = Factory.GetClientRepository(context);
                     clientRepo.Add(result);
-                    context.Commit();
+
+                    var clientReturnUrlRepo = Factory.GetClientReturnUrlRepository(context);
+                    clientReturnUrlRepo.Add(new ClientReturnUrl()
+                    {
+                        ClientId = result.Id,
+                        ReturnUrl = defaulRedirectUrl
+                    });
+
+                    context.Commit();                    
                 }
             }
             catch (DaOauthServiceException)
@@ -549,6 +556,8 @@ namespace DaOAuthCore.Service
             using (var context = Factory.CreateContext(ConnexionString))
             {
                 var clientRepo = Factory.GetClientRepository(context);
+                var clientReturnUrlRepo = Factory.GetClientReturnUrlRepository(context);
+
                 var client = clientRepo.GetByPublicId(clientPublicId);
 
                 if (client == null)
@@ -560,9 +569,13 @@ namespace DaOAuthCore.Service
                 if (client.ClientTypeId != (int)clientType)
                     return false;
 
-                Uri clientUri = new Uri(client.DefautRedirectUri, UriKind.Absolute);
+                IList<Uri> clientUris = new List<Uri>();
+                foreach(var uri in clientReturnUrlRepo.GetAllByClientId(clientPublicId))
+                {
+                    clientUris.Add(new Uri(uri.ReturnUrl, UriKind.Absolute));
+                }
 
-                if (!clientUri.Equals(requestRedirectUri))
+                if (!clientUris.Contains(requestRedirectUri))
                     return false;
             }
 
