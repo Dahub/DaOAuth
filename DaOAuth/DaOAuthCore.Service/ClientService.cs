@@ -320,6 +320,10 @@ namespace DaOAuthCore.Service
                         if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri, EClientType.PUBLIC))
                             return false;
                         break;
+                    case "id_token":
+                        if (!CheckIfClientIsValid(clientPublicId, requestRedirectUri, null))
+                            return false;
+                        break;
                     default:
                         throw new DaOauthServiceException(String.Format(CultureInfo.InvariantCulture, "response_type non pris en charge : {0}", responseType));
                 }
@@ -551,7 +555,7 @@ namespace DaOAuthCore.Service
             return true;
         }
 
-        private bool CheckIfClientIsValid(string clientPublicId, Uri requestRedirectUri, EClientType clientType)
+        private bool CheckIfClientIsValid(string clientPublicId, Uri requestRedirectUri, EClientType? clientType)
         {
             using (var context = Factory.CreateContext(ConnexionString))
             {
@@ -566,7 +570,7 @@ namespace DaOAuthCore.Service
                 if (!client.IsValid)
                     return false;
 
-                if (client.ClientTypeId != (int)clientType)
+                if (clientType != null && client.ClientTypeId != (int)clientType)
                     return false;
 
                 IList<Uri> clientUris = new List<Uri>();

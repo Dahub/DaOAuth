@@ -16,6 +16,29 @@ namespace DaOAuthCore.Service
             return GenerateToken(minutesLifeTime, tokenName, String.Empty, clientId, scope, userPublicId);
         }
 
+        public string GenerateIdToken(int minutesLifeTime, string nonce, string clientId, Guid? userPublicId)
+        {
+            IList<Claim> claims = new List<Claim>();
+            claims.Add(new Claim("iss", Configuration.Issuer));
+            claims.Add(new Claim("sub", userPublicId.HasValue ? userPublicId.Value.ToString() : String.Empty));
+            claims.Add(new Claim("aud", clientId));
+            claims.Add(new Claim("exp", DateTimeOffset.Now.AddMinutes(minutesLifeTime).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
+            claims.Add(new Claim("iat", DateTimeOffset.Now.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
+
+            if(!String.IsNullOrEmpty(nonce))
+                claims.Add(new Claim("nonce", nonce));
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.SecurityKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                signingCredentials: creds,
+                expires: DateTime.Now.AddMinutes(minutesLifeTime));
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         public string GenerateToken(int minutesLifeTime, string tokenName, string userName, string clientId, string scope, Guid? userPublicId)
         {
             IList<Claim> claims = new List<Claim>();
@@ -30,7 +53,7 @@ namespace DaOAuthCore.Service
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: "DaOAuth",
+                issuer: Configuration.Issuer,
                 audience: "DaOAuth",
                 claims: claims,
                 signingCredentials: creds,
@@ -50,11 +73,11 @@ namespace DaOAuthCore.Service
             var handler = new JwtSecurityTokenHandler();
             TokenValidationParameters validationParameters = new TokenValidationParameters
             {
-                ValidIssuer = "DaOAuth",
+                ValidIssuer = Configuration.Issuer,
                 ValidAudience = "DaOAuth",
                 IssuerSigningKeys = new List<SecurityKey>() { new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.SecurityKey)) }
             };
-
+            
             SecurityToken validatedToken;
             try
             {

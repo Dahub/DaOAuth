@@ -131,6 +131,8 @@ go
 
 insert into auth.ClientReturnUrls(ReturnUrl, FK_Client) values ('http://localhost:1234', 3)
 insert into auth.ClientReturnUrls(ReturnUrl, FK_Client) values ('http://localhost:4200/cb', 3)
+insert into auth.ClientReturnUrls(ReturnUrl, FK_Client) values ('http://localhost:4200/auth-callback', 3)
+
 
 /* API Daget (ressource server) */
 insert into auth.RessourceServers(Login, ServerSecret, IsValid, Name, Description)
@@ -150,6 +152,9 @@ insert into auth.Scopes(wording, NiceWording) values ('daget:operation:write', '
 insert into auth.Scopes(wording, NiceWording) values ('daget:operation:read', 'Saisir des opérations (lecture)')
 go
 
+insert into auth.Scopes(wording, NiceWording) values ('openid', 'Informations de profil')
+go
+
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 1)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 2)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 3)
@@ -161,6 +166,11 @@ insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 5)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 6)
 insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 7)
 go
+
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (1, 8)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (2, 8)
+insert into auth.ClientsScopes(FK_Client, FK_Scope) values (3, 8)
+
 
 select * from auth.Scopes
 select * from auth.Clients

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -19,6 +20,7 @@ namespace DaOAuthCore.WebServer.Controllers
         private AppConfiguration _configuration;
         private IJwtService _jwtService;
 
+        private const int ID_TOKEN_LIFETIME = 10; // temps en minutes
         private const int ACCESS_TOKEN_LIFETIME = 10; // temps en minutes
         private const int REFRESH_TOKEN_LIFETIME = 10 * 365 * 24 * 60; // 5256000 => 10 ans exprimés en minutes
         private const string ACCESS_TOKEN_NAME = "access_token";
@@ -38,7 +40,8 @@ namespace DaOAuthCore.WebServer.Controllers
             [FromQuery(Name = "client_id")] string clientId,
             [FromQuery(Name = "state")] string state,
             [FromQuery(Name = "redirect_uri")] string redirectUri,
-            [FromQuery(Name = "scope")] string scope)
+            [FromQuery(Name = "scope")] string scope,
+            [FromQuery(Name = "nonce")] string nonce)
         {
             if (String.IsNullOrEmpty(redirectUri))
                 return StatusCode((int)HttpStatusCode.BadRequest, "le paramètre redirect_uri doit être renseigné");
@@ -52,8 +55,13 @@ namespace DaOAuthCore.WebServer.Controllers
             if (String.IsNullOrEmpty(clientId))
                 return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_request", "Le paramètre client_id est requis", state));
 
-            if (!_clientService.IsClientValidForAuthorization(clientId, new Uri(redirectUri, UriKind.Absolute) , responseType))
-                return Redirect(GenerateRedirectErrorMessage(redirectUri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
+            // http://openid.net/specs/oauth-v2-multiple-response-types-1_0.html
+            IList<string> multiplesResponsesTypes = responseType.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+            foreach (var rt in multiplesResponsesTypes)
+            {
+                if (!_clientService.IsClientValidForAuthorization(clientId, new Uri(redirectUri, UriKind.Absolute), rt))
+                    return Redirect(GenerateRedirectErrorMessage(redirectUri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
+            }
 
             // vérification des scopes proposés
             if (!_clientService.AreScopesAuthorizedForClient(clientId, scope))
@@ -87,15 +95,22 @@ namespace DaOAuthCore.WebServer.Controllers
             if (!_clientService.IsClientAuthorizeByUser(clientId, userName, out Guid userPublicId))
                 return Redirect(GenerateRedirectErrorMessage(redirectUri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
 
-            switch (responseType)
+            if (multiplesResponsesTypes.Count == 1)
             {
-                case "code":
-                    return RedirectForResponseTypeCode(clientId, state, redirectUri, userName, scope, userPublicId);
-                case "token": // implicit grant pour spa applications
-                    return RedirectForResponseTypeToken(clientId, state, redirectUri, userName, scope, userPublicId);
-                default:
-                    return Redirect(GenerateRedirectErrorMessage(redirectUri, "unsupported_response_type", "La valeur du paramètre response_type doit être code", state));
+                switch (multiplesResponsesTypes.First())
+                {
+                    case "code":
+                        return RedirectForResponseTypeCode(clientId, state, redirectUri, userName, scope, userPublicId);
+                    case "token": // implicit grant pour spa applications
+                        return RedirectForResponseTypeToken(clientId, state, redirectUri, userName, scope, userPublicId);
+                    case "id_token": // open id
+                        return RedirectForResponseTypeIdToken(clientId, state, nonce, redirectUri, userPublicId);
+                    default:
+                        return Redirect(GenerateRedirectErrorMessage(redirectUri, "unsupported_response_type", "La valeur du paramètre response_type doit être code token ou id_token", state));
+                }
             }
+            else
+                throw new NotImplementedException();
         }
 
         [HttpPost]
@@ -172,6 +187,15 @@ namespace DaOAuthCore.WebServer.Controllers
         }
 
         #region private        
+
+        private ActionResult RedirectForResponseTypeIdToken(string clientId, string state, string nonce, string redirectUri, Guid userPublicId)
+        {
+            var myToken = _jwtService.GenerateIdToken(ID_TOKEN_LIFETIME, nonce, clientId, userPublicId);
+            string location = String.Concat(redirectUri, "?id_token=", myToken, "?token_type=bearer?expires_in", ID_TOKEN_LIFETIME * 60);
+            if (!String.IsNullOrEmpty(state))
+                location = String.Concat(location, "&state=", state);
+            return Redirect(new Uri(location).AbsoluteUri);
+        }
 
         private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, string userName, string scope, Guid userPublicId)
         {          
