@@ -13,5 +13,6 @@ namespace DaOAuthCore.Domain
         public DateTime? CreationDate { get; set; }
         public bool IsValid { get; set; }
         public ICollection<UserClient> UsersClients { get; set; }
+        public DateTime? LastConnexionDate { get; set; }
     }
 }

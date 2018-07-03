@@ -50,22 +50,28 @@ namespace DaOAuthCore.WebServer.Controllers
                 return StatusCode((int)HttpStatusCode.BadRequest, "l'url de redirection est incorrecte");
 
             if (String.IsNullOrEmpty(responseType))
-                return Redirect( GenerateRedirectErrorMessage(redirectUri, "invalid_request", "Le paramètre response_type est requis", state));
+                return Redirect( GenerateRedirectErrorMessage(redirectUri, "invalid_request", "Le paramètre response_type est requis", state, true));
 
             if (String.IsNullOrEmpty(clientId))
-                return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_request", "Le paramètre client_id est requis", state));
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_request", "Le paramètre client_id est requis", state, responseType == "code"?true:false));
 
             // http://openid.net/specs/oauth-v2-multiple-response-types-1_0.html
             IList<string> multiplesResponsesTypes = responseType.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            bool useFragment = multiplesResponsesTypes.Count() == 1 && multiplesResponsesTypes.First() == "code" ? false : true;
+
             foreach (var rt in multiplesResponsesTypes)
             {
                 if (!_clientService.IsClientValidForAuthorization(clientId, new Uri(redirectUri, UriKind.Absolute), rt))
-                    return Redirect(GenerateRedirectErrorMessage(redirectUri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state));
+                    return Redirect(GenerateRedirectErrorMessage(redirectUri, "unauthorized_client", "Le client ne possède pas les droits de demander une authorisation", state, useFragment));
             }
 
             // vérification des scopes proposés
+            if (multiplesResponsesTypes.Contains("id_token") && !scope.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList().Contains("openid"))
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_scope", "Scopes demandés invalides", useFragment));
+
             if (!_clientService.AreScopesAuthorizedForClient(clientId, scope))
-                return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_scope", "Scopes demandés invalides"));
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "invalid_scope", "Scopes demandés invalides", useFragment));
 
             // si l'utilisateur n'est pas connecté, il faut l'inviter à le faire
             if (!User.Identity.IsAuthenticated)
@@ -93,7 +99,7 @@ namespace DaOAuthCore.WebServer.Controllers
             string userName = ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier).Value;
             
             if (!_clientService.IsClientAuthorizeByUser(clientId, userName, out Guid userPublicId))
-                return Redirect(GenerateRedirectErrorMessage(redirectUri, "access_denied", "L'utilisateur a refusé l'accès au client", state));
+                return Redirect(GenerateRedirectErrorMessage(redirectUri, "access_denied", "L'utilisateur a refusé l'accès au client", state, useFragment));
 
             if (multiplesResponsesTypes.Count == 1)
             {
@@ -106,7 +112,7 @@ namespace DaOAuthCore.WebServer.Controllers
                     case "id_token": // open id
                         return RedirectForResponseTypeIdToken(clientId, state, nonce, redirectUri, userPublicId);
                     default:
-                        return Redirect(GenerateRedirectErrorMessage(redirectUri, "unsupported_response_type", "La valeur du paramètre response_type doit être code token ou id_token", state));
+                        return Redirect(GenerateRedirectErrorMessage(redirectUri, "unsupported_response_type", "La valeur du paramètre response_type doit être code token ou id_token", state, true));
                 }
             }
             else
@@ -191,7 +197,7 @@ namespace DaOAuthCore.WebServer.Controllers
         private ActionResult RedirectForResponseTypeIdToken(string clientId, string state, string nonce, string redirectUri, Guid userPublicId)
         {
             var myToken = _jwtService.GenerateIdToken(ID_TOKEN_LIFETIME, nonce, clientId, userPublicId);
-            string location = String.Concat(redirectUri, "?id_token=", myToken, "?token_type=bearer?expires_in", ID_TOKEN_LIFETIME * 60);
+            string location = String.Concat(redirectUri, "#id_token=", myToken, "&token_type=bearer&expires_in", ID_TOKEN_LIFETIME * 60);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
             return Redirect(new Uri(location).AbsoluteUri);
@@ -200,7 +206,7 @@ namespace DaOAuthCore.WebServer.Controllers
         private ActionResult RedirectForResponseTypeToken(string clientId, string state, string redirectUri, string userName, string scope, Guid userPublicId)
         {          
             var myToken = _jwtService.GenerateToken(ACCESS_TOKEN_LIFETIME, ACCESS_TOKEN_NAME, userName, clientId, scope, userPublicId);
-            string location = String.Concat(redirectUri, "?token=", myToken, "?token_type=bearer?expires_in", ACCESS_TOKEN_LIFETIME * 60);
+            string location = String.Concat(redirectUri, "#token=", myToken, "&token_type=bearer&expires_in", ACCESS_TOKEN_LIFETIME * 60);
             if (!String.IsNullOrEmpty(state))
                 location = String.Concat(location, "&state=", state);
             return Redirect(new Uri(location).AbsoluteUri);
@@ -387,18 +393,36 @@ namespace DaOAuthCore.WebServer.Controllers
             return true;
         }
 
-        private static string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, string stateInfo)
+        private static string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, string stateInfo, bool useUrlFragment)
         {
             if (String.IsNullOrEmpty(stateInfo))
-                return GenerateRedirectErrorMessage(redirectUri, errorName, errorDescription);            
+                return GenerateRedirectErrorMessage(redirectUri, errorName, errorDescription, useUrlFragment);
 
-            Uri uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}?error={1}&error_description={2}&state={3}", redirectUri, errorName, errorDescription, stateInfo));
+            Uri uri = null;
+
+            if (useUrlFragment)
+            {
+                uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}#error={1}&error_description={2}&state={3}", redirectUri, errorName, errorDescription, stateInfo));
+            }
+            else
+            {
+                uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}?error={1}&error_description={2}&state={3}", redirectUri, errorName, errorDescription, stateInfo));
+            }
+
             return uri.AbsoluteUri;
         }
 
-        private static string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription)
+        private static string GenerateRedirectErrorMessage(string redirectUri, string errorName, string errorDescription, bool useUrlFragment)
         {
-            Uri uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription));
+            Uri uri = null;
+            if (useUrlFragment)
+            {
+              uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}#error={1}&error_description={2}", redirectUri, errorName, errorDescription));
+            }
+            else
+            {
+                uri = new Uri(String.Format(CultureInfo.InvariantCulture, "{0}?error={1}&error_description={2}", redirectUri, errorName, errorDescription));
+            }
             return uri.AbsoluteUri;
         }
 

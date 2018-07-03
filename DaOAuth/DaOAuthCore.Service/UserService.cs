@@ -21,6 +21,9 @@ namespace DaOAuthCore.Service
                         String.Concat(Configuration.PasswordSalt, password), user.Password))
                     {
                         toReturn = user.ToDto();
+                        user.LastConnexionDate = DateTime.Now;
+                        userRepo.Update(user);
+                        context.Commit();
                     }
                 }
             }

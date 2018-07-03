@@ -47,6 +47,7 @@ namespace DaOAuthCore.Dal.EF
             modelBuilder.Entity<User>().Property(p => p.IsValid).HasColumnName("IsValid").HasColumnType("bit").IsRequired();
             modelBuilder.Entity<User>().Property(p => p.Password).HasColumnName("Password").HasColumnType("varbinary(50)").HasMaxLength(50);
             modelBuilder.Entity<User>().Property(p => p.UserName).HasColumnName("UserName").HasColumnType("nvarchar(32)").HasMaxLength(32).IsRequired();
+            modelBuilder.Entity<User>().Property(p => p.LastConnexionDate).HasColumnName("LastConnexionDate").HasColumnType("datetime");
 
             modelBuilder.Entity<ClientType>().ToTable("ClientsTypes");
             modelBuilder.Entity<ClientType>().HasKey(c => c.Id);

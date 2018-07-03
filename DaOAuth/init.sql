@@ -76,7 +76,8 @@ create table auth.Users
 	FullName nvarchar(256) null,
 	BirthDate datetime null,
 	CreationDate datetime not null,
-	IsValid bit not null
+	IsValid bit not null,
+	LastConnexionDate datetime null
 )
 go
 

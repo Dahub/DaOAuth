@@ -117,7 +117,7 @@ namespace DaOAuthCore.Service
             {
                 string[] scopes = null;
                 if (!String.IsNullOrEmpty(scope))
-                    scopes = scope.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    scopes = scope.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);              
 
                 using (var context = Factory.CreateContext(ConnexionString))
                 {

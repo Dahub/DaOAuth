@@ -22,10 +22,18 @@ namespace DaOAuthCore.Service
             claims.Add(new Claim("iss", Configuration.Issuer));
             claims.Add(new Claim("sub", userPublicId.HasValue ? userPublicId.Value.ToString() : String.Empty));
             claims.Add(new Claim("aud", clientId));
-            claims.Add(new Claim("exp", DateTimeOffset.Now.AddMinutes(minutesLifeTime).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
-            claims.Add(new Claim("iat", DateTimeOffset.Now.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
+            claims.Add(new Claim("exp", DateTimeOffset.Now.AddMinutes(minutesLifeTime).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64));
+            claims.Add(new Claim("iat", DateTimeOffset.Now.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64));
 
-            if(!String.IsNullOrEmpty(nonce))
+            // auth_time : il faut récupérer l'utilisateur
+            using (var context = Factory.CreateContext(ConnexionString))
+            {
+                var userRepo = Factory.GetUserRepository(context);
+                var myUser = userRepo.GetUserByUserPublicIdAndClientId(userPublicId.Value, clientId);
+                claims.Add(new Claim("auth_time", new DateTimeOffset(myUser.LastConnexionDate.Value).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64));
+            }
+
+            if (!String.IsNullOrEmpty(nonce))
                 claims.Add(new Claim("nonce", nonce));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.SecurityKey));
@@ -44,7 +52,7 @@ namespace DaOAuthCore.Service
             IList<Claim> claims = new List<Claim>();
             claims.Add(new Claim("client_id", clientId));
             claims.Add(new Claim("token_name", tokenName));
-            claims.Add(new Claim("issued", DateTimeOffset.Now.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
+            claims.Add(new Claim("issued", DateTimeOffset.Now.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64));
             claims.Add(new Claim("user_public_id", userPublicId.HasValue ? userPublicId.Value.ToString() : String.Empty));
             claims.Add(new Claim(ClaimTypes.NameIdentifier, !String.IsNullOrEmpty(userName) ? userName : String.Empty));
             claims.Add(new Claim("scope", !String.IsNullOrEmpty(scope) ? scope : String.Empty));

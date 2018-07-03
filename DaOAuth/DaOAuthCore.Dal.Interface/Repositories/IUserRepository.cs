@@ -1,4 +1,5 @@
-﻿using DaOAuthCore.Domain;
+﻿using System;
+using DaOAuthCore.Domain;
 
 namespace DaOAuthCore.Dal.Interface
 {
@@ -7,5 +8,6 @@ namespace DaOAuthCore.Dal.Interface
         void Add(User toAdd);
         User GetByUserName(string userName);
         void Update(User toUpdate);
+        User GetUserByUserPublicIdAndClientId(Guid value, string clientId);
     }
 }

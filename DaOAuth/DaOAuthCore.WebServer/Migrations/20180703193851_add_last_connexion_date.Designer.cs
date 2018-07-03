@@ -11,9 +11,10 @@ using System;
 namespace DaOAuthCore.WebServer.Migrations
 {
     [DbContext(typeof(DaOAuthContext))]
-    partial class DaOAuthContextModelSnapshot : ModelSnapshot
+    [Migration("20180703193851_add_last_connexion_date")]
+    partial class add_last_connexion_date
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
